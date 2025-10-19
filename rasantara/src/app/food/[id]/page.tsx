@@ -11,7 +11,7 @@ import AIRecommendations from "@/components/AiRecommendation"
 export default function FoodDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const foodId = Number.parseInt(params.id as string)
+  const foodId = params.id as string
   type Food = {
     id: number | string
     name?: string
@@ -24,6 +24,7 @@ export default function FoodDetailPage() {
   type User = { id?: string; role?: string }
 
   const [food, setFood] = useState<Food | null>(null)
+  const [imageSrc, setImageSrc] = useState<string | undefined>(undefined)
   const [user, setUser] = useState<User | null>(null)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [recommendations, setRecommendations] = useState<Array<Pick<Food, 'id' | 'name' | 'photo' | 'origin'>>>([])
@@ -37,6 +38,8 @@ export default function FoodDetailPage() {
         if (res.ok) {
           const f = await res.json()
           setFood(f)
+            // initialize image src (use remote photo if present)
+            setImageSrc(f?.photo || "/placeholder.svg")
           // set recommendations from related by island if returned
           if (f?.origin?.island) {
             const relatedRes = await fetch(`/api/foods?island=${encodeURIComponent(f.origin.island)}`)
@@ -107,12 +110,15 @@ export default function FoodDetailPage() {
           <div className="space-y-4">
             <div className="relative h-96 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg overflow-hidden">
               <Image
-                src={food?.photo || "/placeholder.svg"}
+                src={imageSrc || "/placeholder.svg"}
                 alt={food?.name ?? ""}
                 fill
                 className="object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "/indonesian-food.jpg"
+                // bypass Next optimization for problematic remote hosts during dev
+                unoptimized
+                onError={() => {
+                  // when loading fails, fall back to a local image to avoid retry loops
+                  setImageSrc("/indonesian-food.jpg")
                 }}
               />
             </div>

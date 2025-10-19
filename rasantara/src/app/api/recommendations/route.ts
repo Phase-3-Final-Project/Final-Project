@@ -18,7 +18,6 @@ export async function POST(request: Request) {
 
     const prompt = `You are an Indonesian food expert. Based on viewing history (${historyText}) and wishlist (${wishlistText}), recommend 2-3 Indonesian foods similar to ${foodName}. Return a JSON array of objects {name, reason}.`;
 
-    // Minimal example using OpenAI-style fetch so there is no `any`; adapt endpoint as needed
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
