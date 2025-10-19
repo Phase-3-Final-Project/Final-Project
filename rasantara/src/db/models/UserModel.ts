@@ -26,7 +26,7 @@ type newUser = {
 
 class UserModel {
   static collection() {
-    return database.collection("users");
+    return database.collection<newUser>("users");
   }
 
   static async create(newUser: newUser) {
