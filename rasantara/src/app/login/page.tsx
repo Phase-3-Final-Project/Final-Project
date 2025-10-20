@@ -12,7 +12,7 @@ export default function Login() {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/login`, {
+      const res = await fetch(`/api/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
         headers: {
@@ -31,14 +31,14 @@ export default function Login() {
       console.log(result, "Login Success");
     } catch (err) {
       console.error((err as Error).message);
-      toast.error((err as Error).message);
+      toast.error((err as Error).message || "Login Failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F5EB] flex flex-col">
+    <div className="min-h-screen bg-[#F9F5EB] flex flex-col pt-32 pb-16">
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center px-4 mb-50">
         <div className="w-full max-w-md">

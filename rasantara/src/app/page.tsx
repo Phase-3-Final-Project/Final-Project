@@ -1,6 +1,3 @@
-import { Card } from "@/components/Card";
-import Image from "next/image";
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#F9F5EB] flex flex-col">

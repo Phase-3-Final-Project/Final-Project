@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SlHome } from "react-icons/sl";
+import { IoHome } from "react-icons/io5";
 import { IoIosPeople } from "react-icons/io";
 
 export default function Footer() {
@@ -8,12 +8,20 @@ export default function Footer() {
       <div className="max-w-4xl mx-auto flex flex-col items-center space-y-3 text-sm text-gray-600">
         {/* Links */}
         <div className="flex space-x-4">
-          <Link href="/" className=" text-[#5C4033] hover:text-black">
-            <SlHome />
+          <Link
+            href="/"
+            className="flex flex-col items-center text-[#5C4033] hover:text-black"
+          >
+            <IoHome />
+            <p>Home</p>
           </Link>
           <span>|</span>
-          <Link href="/products" className=" text-[#5C4033] hover:text-black">
+          <Link
+            href="/about"
+            className="flex flex-col items-center text-[#5C4033] hover:text-black"
+          >
             <IoIosPeople />
+            <p>About Us</p>
           </Link>
         </div>
         {/* Copyright */}

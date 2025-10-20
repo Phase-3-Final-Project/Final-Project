@@ -12,7 +12,7 @@ const UserSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z
     .string()
-    .min(6, { message: "Password must be at least 6 characters long" }),
+    .min(5, { message: "Password must be at least 5 characters long" }),
   role: z.enum(["user", "admin"]).default("user"),
 });
 
@@ -45,7 +45,7 @@ class UserModel {
     newUser.password = hashedPassword;
 
     await this.collection().insertOne(newUser);
-    return "user created successfully";
+    return "User created successfully";
   }
 
   static async findByEmail(email: string) {
