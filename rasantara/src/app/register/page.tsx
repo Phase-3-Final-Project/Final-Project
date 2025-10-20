@@ -8,13 +8,43 @@ export default function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("role");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    try {
+      const userRole = role === "role" ? "user" : role;
+      const response = await fetch("/api/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          username,
+          email,
+          password,
+          role: userRole,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("Register Success!");
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1000);
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#F9F5EB] flex flex-col">
+    <div className="min-h-screen bg-[#F9F5EB] flex flex-col pt-32 pb-16">
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center px-4 mb-8">
         <div className="w-full max-w-md">

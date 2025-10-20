@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const island = url.searchParams.get('island');
 
-    type Food = { id: string | number; name?: string; origin?: { island?: string } }
+    type Food = { _id: string | number; name?: string; origin?: { island?: string } }
     if (island) {
       const all = await FoodModel.getAll();
   const filtered = (all as unknown as Food[]).filter((f) => f.origin?.island === island);
