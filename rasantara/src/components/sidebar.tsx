@@ -1,6 +1,6 @@
 export default function Sidebar() {
   return (
-    <aside className="w-72 sticky top-0 self-start min-h-screen bg-[#FAFAFA] text-[#5C4033] border-r border-gray-200 flex flex-col">
+    <aside className="w-72 sticky top-0 self-start max-h-screen bg-[#FAFAFA] text-[#5C4033] border-r border-gray-200 flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <h2 className="text-2xl font-bold text-[#5C4033]">
@@ -105,18 +105,6 @@ export default function Sidebar() {
           </li>
         </ul>
       </nav>
-
-      {/* Footer Info */}
-      <div className="mt-auto p-4 border-t border-gray-200 bg-[#FAFAFA]">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#5C4033] flex items-center justify-center">
-            <span className="text-sm font-bold text-white">A</span>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-[#5C4033]">Admin User</p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }
