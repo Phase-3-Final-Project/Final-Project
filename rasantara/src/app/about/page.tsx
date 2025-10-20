@@ -11,12 +11,12 @@ export default function About() {
             Sabang to Merauke, from Timor to Talaud, this culturally vibrant
             archipelago never ceases to amaze with its thousands of unique local
             dishes and beverages. Through Rasantara, we aim to build an
-            interactive platform that offers deep insights into Indonesia’s
+            interactive platform that offers deep insights into Indonesia&apos;s
             culinary heritage in the form of a modern web application. The
             platform features an interactive food map, detailed information about
             each dish, an immersive 3D overview, and AI-powered recommendations to
             help users explore and understand the stories behind every flavor.
-            More than just a directory, Rasantara is a celebration of Indonesia’s
+            More than just a directory, Rasantara is a celebration of Indonesia&apos;s
             culinary identity — connecting people, culture, and taste across the
             islands.
           </p>

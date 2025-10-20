@@ -1,30 +1,49 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { IoHome } from "react-icons/io5";
 import { GiSelfLove } from "react-icons/gi";
 import { IoLogIn } from "react-icons/io5";
 import { IoLogOut } from "react-icons/io5";
+import { RiDashboardFill } from "react-icons/ri";
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const isLoginPage = pathname === "/login";
 
   useEffect(() => {
-    const checkLogin = () => {
+    const checkLoginAndRole = async () => {
       const cookies = document.cookie.split("; ");
       const authCookie = cookies.find(cookie => cookie.startsWith("Authorization="));
       setIsLoggedIn(!!authCookie);
+
+      if (authCookie) {
+        try {
+          const response = await fetch("/api/user/me");
+          if (response.ok) {
+            const data = await response.json();
+            setUserRole(data.user?.role || null);
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+        }
+      } else {
+        setUserRole(null);
+      }
     };
 
-    checkLogin();
+    checkLoginAndRole();
   }, []);
 
   const handleLogout = () => {
     document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     setIsLoggedIn(false);
+    setUserRole(null);
     toast.success("Logged out successfully");
     router.push("/");
   };
@@ -54,12 +73,23 @@ export default function Navbar() {
           <GiSelfLove />
           <p>Wishlist</p>
         </Link>
-        <a
-          href="/API"
-          className="text-sm text-[#5C4033] hover:text-black font-bold cursor-pointer"
-        >
-          API
-        </a>
+        {userRole === "admin" ? (
+          <Link
+            href="/admin"
+            className="flex flex-col items-center text-sm text-[#5C4033] hover:text-black font-bold"
+          >
+            <RiDashboardFill />
+            <p>CMS</p>
+          </Link>
+        ) : (
+          <div
+            className="flex flex-col items-center text-sm text-gray-400 cursor-not-allowed opacity-50"
+            title="Hanya admin yang dapat mengakses CMS"
+          >
+            <RiDashboardFill />
+            <p>CMS</p>
+          </div>
+        )}
       </div>
       <div className="flex space-x-4 items-center">
         {isLoggedIn ? (
@@ -71,13 +101,25 @@ export default function Navbar() {
             <span>Logout</span>
           </button>
         ) : (
-          <Link
-            href="/login"
-            className="flex items-center space-x-1 text-sm text-[#5C4033] hover:text-black font-bold"
-          >
-            <IoLogIn />
-            <span>Login</span>
-          </Link>
+          <>
+            {isLoginPage ? (
+              <div
+                className="flex items-center space-x-1 text-sm text-gray-400 cursor-not-allowed opacity-50"
+                title="Anda sudah berada di halaman login"
+              >
+                <IoLogIn />
+                <span>Login</span>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center space-x-1 text-sm text-[#5C4033] hover:text-black font-bold"
+              >
+                <IoLogIn />
+                <span>Login</span>
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>
