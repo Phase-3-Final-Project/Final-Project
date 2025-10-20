@@ -44,7 +44,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F5EB] flex flex-col">
+    <div className="min-h-screen bg-[#F9F5EB] flex flex-col pt-32 pb-16">
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center px-4 mb-8">
         <div className="w-full max-w-md">
