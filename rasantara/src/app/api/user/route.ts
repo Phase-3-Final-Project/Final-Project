@@ -1,4 +1,5 @@
 import WishlistModel from '@/db/models/WishlistModel';
+import UserModel from '@/db/models/UserModel';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -12,5 +13,17 @@ export async function GET() {
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { name, username, email, password, role } = await request.json();
+    const newUser = { name, username, email, password, role: role || 'user' };
+    await UserModel.create(newUser);
+    return NextResponse.json({ message: 'User created successfully' }, { status: 201 });
+  } catch (err: any) {
+    console.error(err);
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: err.status || 500 });
   }
 }
