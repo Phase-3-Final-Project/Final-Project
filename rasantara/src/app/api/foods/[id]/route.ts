@@ -1,4 +1,6 @@
 import FoodModel from '@/db/models/FoodModel';
+import { NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 
 export async function GET(request: Request, { params }: { params: { _id: string } }) {
   try {
@@ -9,6 +11,6 @@ export async function GET(request: Request, { params }: { params: { _id: string 
     return new Response(JSON.stringify(food), { status: 200 });
   } catch (err) {
     console.error(err);
-    return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
