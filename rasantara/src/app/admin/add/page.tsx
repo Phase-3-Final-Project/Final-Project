@@ -5,6 +5,46 @@ import { useRouter } from "next/navigation";
 import { Canvas } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
 
+  // Resize local image to reduce payload size (helps avoid server body limit)
+  const fileToDataUrlResized = async (file: File, maxDim = 1024, quality = 0.85): Promise<string> => {
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result as string);
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+    // Create image element
+    const img: HTMLImageElement = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = dataUrl;
+    });
+    // Compute scale
+    const { width, height } = img;
+    const scale = Math.min(1, maxDim / Math.max(width, height));
+    if (scale >= 1) return dataUrl; // already small
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    // Use JPEG to reduce size further
+    const out = canvas.toDataURL('image/jpeg', quality);
+    return out || dataUrl;
+  };
+  const dataUrlToBlob = (dataUrl: string): Blob => {
+    const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+    if (!match) return new Blob();
+    const mime = match[1] || 'image/jpeg';
+    const b64 = match[2] || '';
+    const byteStr = atob(b64);
+    const len = byteStr.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = byteStr.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  };
 function ModelViewer({ url }: { url: string }) {
   useGLTF.preload(url);
   const { scene } = useGLTF(url);
@@ -81,12 +121,7 @@ export default function Add() {
       // Prepare photo: if file selected -> base64, else use URL
       let photoValue: string | null = null;
       if (photoFile) {
-        photoValue = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(photoFile);
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = (err) => reject(err);
-        });
+        photoValue = await fileToDataUrlResized(photoFile, 1024, 0.85);
       } else if (photoUrl.trim()) {
         photoValue = photoUrl.trim();
       }
@@ -330,12 +365,8 @@ export default function Add() {
                     // Use first image (local or url) for 3D generation
                     let image: string | null = null;
                     if (photoFile) {
-                      image = await new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.readAsDataURL(photoFile);
-                        reader.onload = () => resolve(reader.result as string);
-                        reader.onerror = (err) => reject(err);
-                      });
+                      // Use a slightly smaller dimension for Meshy to avoid large payloads
+                      image = await fileToDataUrlResized(photoFile, 800, 0.85);
                     } else if (photoUrl.trim()) {
                       image = photoUrl.trim();
                     }
@@ -344,13 +375,57 @@ export default function Add() {
                     setMeshLogs([]);
                     setModelUrl(null);
                     try {
-                      const start = await fetch("/api/image-to-3d", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ image_data: image }),
-                      });
+                      const findModelUrlDeep = (obj: any): string | null => {
+                        if (!obj) return null;
+                        const seen = new Set<any>();
+                        const stack: any[] = [obj];
+                        const isUrl = (s: any) => typeof s === 'string' && /^(https?:)?\/\//i.test(s);
+                        while (stack.length) {
+                          const cur = stack.pop();
+                          if (!cur || typeof cur !== 'object' || seen.has(cur)) continue;
+                          seen.add(cur);
+                          for (const [k, v] of Object.entries(cur)) {
+                            if (typeof v === 'string') {
+                              const lowerK = k.toLowerCase();
+                              if (
+                                lowerK.includes('model_url') ||
+                                lowerK.includes('glb') || lowerK.includes('gltf') ||
+                                (['download_url', 'url', 'href'].includes(lowerK) && /glb|gltf/i.test(v))
+                              ) {
+                                if (isUrl(v)) return v;
+                              }
+                            } else if (v && typeof v === 'object') {
+                              stack.push(v);
+                            }
+                          }
+                          if (Array.isArray(cur)) for (const it of cur) stack.push(it);
+                        }
+                        return null;
+                      };
+                      if (image.startsWith('data:')) {
+                        setMeshLogs((p) => [...p, `🖼️ Local image (base64) size: ~${Math.round(image.length/1024)} KB`]);
+                      } else {
+                        setMeshLogs((p) => [...p, `🔗 Image URL detected`]);
+                      }
+                      let start: Response;
+                      if (photoFile && image.startsWith('data:')) {
+                        const fd = new FormData();
+                        const blob = dataUrlToBlob(image);
+                        const fileForUpload = new File([blob], 'upload.jpg', { type: blob.type || 'image/jpeg' });
+                        fd.append('file', fileForUpload);
+                        start = await fetch('/api/image-to-3d', { method: 'POST', body: fd });
+                      } else {
+                        start = await fetch("/api/image-to-3d", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ image_data: image }),
+                        });
+                      }
                       const data = await start.json();
-                      if (!start.ok) throw new Error(data.error || "Gagal memulai generate 3D");
+                      if (!start.ok) {
+                        setMeshLogs((p) => [...p, `❌ Start error (${start.status}): ${typeof data === 'object' ? JSON.stringify(data) : String(data)}`]);
+                        throw new Error(data.error || "Gagal memulai generate 3D");
+                      }
                       const id = data.task_id || data.taskId || data.id || data.result;
                       if (!id) throw new Error("Task ID tidak ditemukan");
                       setMeshLogs((p) => [...p, `🚀 Task ID: ${id}`]);
@@ -382,11 +457,16 @@ export default function Add() {
                                 d?.result?.model?.url ||
                                 d?.model_urls?.glb ||
                                 d?.result?.model_urls?.glb ||
+                                d?.model_urls?.gltf ||
+                                d?.result?.model_urls?.gltf ||
                                 d?.output?.glb ||
                                 d?.output?.model_url ||
+                                (typeof d?.url === 'string' && /glb|gltf/i.test(d.url) ? d.url : null) ||
+                                (typeof d?.download_url === 'string' && /glb|gltf/i.test(d.download_url) ? d.download_url : null) ||
                                 // sometimes under assets array
-                                (Array.isArray(d?.result?.assets) && d.result.assets.find((a: any) => a?.download_url)?.download_url) ||
-                                (Array.isArray(d?.assets) && d.assets.find((a: any) => a?.download_url)?.download_url) ||
+                                (Array.isArray(d?.result?.assets) && d.result.assets.find((a: any) => typeof a?.download_url === 'string' && /glb|gltf/i.test(a.download_url))?.download_url) ||
+                                (Array.isArray(d?.assets) && d.assets.find((a: any) => typeof a?.download_url === 'string' && /glb|gltf/i.test(a.download_url))?.download_url) ||
+                                findModelUrlDeep(d) ||
                                 null;
 
                               const isDone =
@@ -456,10 +536,12 @@ export default function Add() {
                           return null;
                         };
                         let found = false;
+                        let lastDetail: any = null;
                         try {
-                          for (let attempt = 1; attempt <= 15; attempt++) {
+                          for (let attempt = 1; attempt <= 30; attempt++) {
                             const detailRes = await fetch(`/api/image-to-3d/result?id=${id}`, { cache: 'no-store' });
                             const detail = await detailRes.json();
+                            lastDetail = detail;
                             const status = String(detail?.status || detail?.result?.status || '').toUpperCase();
                             const progress = detail?.progress ?? detail?.result?.progress;
                             if (status) {
@@ -473,10 +555,14 @@ export default function Add() {
                               detail?.result?.model?.url ||
                               detail?.model_urls?.glb ||
                               detail?.result?.model_urls?.glb ||
+                              detail?.model_urls?.gltf ||
+                              detail?.result?.model_urls?.gltf ||
                               detail?.output?.glb ||
                               detail?.output?.model_url ||
-                              (Array.isArray(detail?.result?.assets) && detail.result.assets.find((a: any) => a?.download_url)?.download_url) ||
-                              (Array.isArray(detail?.assets) && detail.assets.find((a: any) => a?.download_url)?.download_url) ||
+                              (typeof detail?.url === 'string' && /glb|gltf/i.test(detail.url) ? detail.url : null) ||
+                              (typeof detail?.download_url === 'string' && /glb|gltf/i.test(detail.download_url) ? detail.download_url : null) ||
+                              (Array.isArray(detail?.result?.assets) && detail.result.assets.find((a: any) => typeof a?.download_url === 'string' && /glb|gltf/i.test(a.download_url))?.download_url) ||
+                              (Array.isArray(detail?.assets) && detail.assets.find((a: any) => typeof a?.download_url === 'string' && /glb|gltf/i.test(a.download_url))?.download_url) ||
                               findModelUrlDeep(detail) ||
                               null;
                             if (candidate) {
@@ -492,7 +578,12 @@ export default function Add() {
                             await sleep(2000);
                           }
                           if (!found) {
-                            setMeshLogs((p) => [...p, "⚠️ Selesai tanpa model_url (polled)"]);
+                            try {
+                              const snapshot = typeof lastDetail === 'object' ? JSON.stringify(lastDetail).slice(0, 1200) : String(lastDetail);
+                              setMeshLogs((p) => [...p, "⚠️ Selesai tanpa model_url (polled)", `🧪 Last detail: ${snapshot}${snapshot.length>=1200? '…' : ''}`]);
+                            } catch {
+                              setMeshLogs((p) => [...p, "⚠️ Selesai tanpa model_url (polled)"]);
+                            }
                           }
                         } catch (e: any) {
                           setMeshLogs((p) => [...p, `⚠️ Tidak bisa mengambil result: ${e.message}`]);
