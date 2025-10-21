@@ -27,6 +27,28 @@ export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [user, setUser] = useState<{ id: string } | null>(null);
 
+  const handleRemoveFromWishlist = async (wishlistId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click navigation
+    
+    try {
+      const res = await fetch('/api/wishlist', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wishlistId }),
+      });
+      
+      if (res.ok) {
+        // Remove item from local state
+        setWishlistItems(prev => prev.filter(item => item.wishlistId !== wishlistId));
+      } else {
+        const error = await res.json();
+        console.error('Failed to remove from wishlist:', error);
+      }
+    } catch (err) {
+      console.error('Error removing from wishlist:', err);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       // Check authentication via cookie-backed endpoint
@@ -106,32 +128,44 @@ export default function WishlistPage() {
               return (
                 <Card
                   key={item.wishlistId || `food-${food.id || food.name}`}
-                  onClick={() => router.push(`/food/${food.id ?? ""}`)}
-                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-white border-amber-200"
+                  className="overflow-hidden hover:shadow-lg transition-shadow bg-white border-amber-200 pt-0 relative group"
                 >
-                  <div className="relative h-48 bg-gradient-to-br from-amber-100 to-orange-100">
-                    <Image
-                      src={food.photo || "/placeholder.svg"}
-                      alt={food.name ?? ""}
-                      fill
-                      className="object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "/indonesian-food.jpg";
-                      }}
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-lg text-amber-900 mb-2">
-                      {food.name}
-                    </h3>
-                    <p className="text-sm text-amber-700 line-clamp-2 mb-3">
-                      {food.description}
-                    </p>
-                    <div className="flex items-center justify-between text-xs text-amber-600">
-                      <span>📍 {food.origin?.province ?? ""}</span>
-                      <span className="bg-amber-100 px-2 py-1 rounded-full">
-                        {food.origin?.island ?? ""}
-                      </span>
+                  <div 
+                    onClick={() => router.push(`/food/${food.id ?? ""}`)}
+                    className="cursor-pointer"
+                  >
+                    <div className="relative h-48 bg-gradient-to-br from-amber-100 to-orange-100">
+                      <Image
+                        src={food.photo || "/placeholder.svg"}
+                        alt={food.name ?? ""}
+                        fill
+                        className="object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/indonesian-food.jpg";
+                        }}
+                      />
+                      {/* Remove button overlay */}
+                      <button
+                        onClick={(e) => handleRemoveFromWishlist(item.wishlistId || '', e)}
+                        className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-1 opacity-0 group-hover:opacity-100"
+                        aria-label="Remove from wishlist"
+                      >
+                        💔 <span>Un-Save</span>
+                      </button>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-lg text-amber-900 mb-2">
+                        {food.name}
+                      </h3>
+                      <p className="text-sm text-amber-700 line-clamp-2 mb-3">
+                        {food.description}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-amber-600">
+                        <span>📍 {food.origin?.province ?? ""}</span>
+                        <span className="bg-amber-100 px-2 py-1 rounded-full">
+                          {food.origin?.island ?? ""}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Card>

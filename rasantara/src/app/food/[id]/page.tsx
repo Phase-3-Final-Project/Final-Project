@@ -139,6 +139,10 @@ export default function FoodDetailPage() {
         if (res.ok) {
           setIsWishlisted(false)
           setCurrentWishlistId(null)
+          console.log('Removed from wishlist successfully');
+        } else {
+          const error = await res.json();
+          console.error('Failed to remove from wishlist:', error);
         }
       } else {
         // Add to wishlist
@@ -152,7 +156,25 @@ export default function FoodDetailPage() {
           const result = await res.json();
           console.log('Added to wishlist:', result);
           setIsWishlisted(true)
-          // Optionally refetch to get the new wishlistId (not critical for now)
+          
+          // Fetch updated wishlist to get the new wishlistId
+          const ures = await fetch(`/api/user`)
+          if (ures.ok) {
+            const body = await ures.json()
+            type WishlistItem = { wishlistId?: string; food?: { id?: string; _id?: string; name?: string } }
+            const wishlistItems = (body.wishlist || []) as WishlistItem[]
+            
+            // Find the wishlist item for this food
+            const currentFoodInWishlist = wishlistItems.find((w) => {
+              const wFoodId = w.food?.id || w.food?._id
+              return wFoodId && String(wFoodId) === String(foodId)
+            })
+            
+            if (currentFoodInWishlist && currentFoodInWishlist.wishlistId) {
+              setCurrentWishlistId(currentFoodInWishlist.wishlistId)
+              console.log('Set wishlistId:', currentFoodInWishlist.wishlistId);
+            }
+          }
         } else {
           const error = await res.json();
           console.error('Failed to add to wishlist:', error);

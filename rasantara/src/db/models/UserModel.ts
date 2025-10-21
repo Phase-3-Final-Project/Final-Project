@@ -63,7 +63,7 @@ class UserModel {
 
     if (!user) {
       // Create new user from Google OAuth
-      const newGoogleUser = {
+      const newGoogleUser: newUser & { provider: string; image?: string } = {
         username: profile.email.split("@")[0], // Use email prefix as username
         name: profile.name,
         email: profile.email,
@@ -73,7 +73,7 @@ class UserModel {
         image: profile.image,
       };
 
-      await this.collection().insertOne(newGoogleUser as any);
+      await this.collection().insertOne(newGoogleUser);
       user = await this.collection().findOne({ email: profile.email });
     }
 
