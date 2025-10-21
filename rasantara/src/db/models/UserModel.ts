@@ -52,6 +52,33 @@ class UserModel {
     const user = await this.collection().findOne({ email: email });
     return user;
   }
+
+  static async findOrCreateGoogleUser(profile: {
+    email: string;
+    name: string;
+    image?: string;
+  }) {
+    // Check if user already exists
+    let user = await this.collection().findOne({ email: profile.email });
+
+    if (!user) {
+      // Create new user from Google OAuth
+      const newGoogleUser = {
+        username: profile.email.split("@")[0], // Use email prefix as username
+        name: profile.name,
+        email: profile.email,
+        password: "", // No password for OAuth users
+        role: "user" as const,
+        provider: "google",
+        image: profile.image,
+      };
+
+      await this.collection().insertOne(newGoogleUser as any);
+      user = await this.collection().findOne({ email: profile.email });
+    }
+
+    return user;
+  }
 }
 
 export default UserModel;
