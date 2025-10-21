@@ -32,8 +32,16 @@ export default function AIRecommendations({ foodName, userHistory, userWishlist 
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to fetch recommendations")
       const data = await response.json()
+      
+      if (!response.ok) {
+        // Show the specific error from the API
+        const errorMsg = data.error || "Failed to fetch recommendations"
+        setError(errorMsg)
+        console.error("API error:", response.status, data)
+        return
+      }
+      
       setRecommendations(data.recommendations || [])
     } catch (err) {
       setError("Could not generate AI recommendations")
