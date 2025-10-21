@@ -508,11 +508,8 @@ export default function Home() {
                                 alt={food.name}
                                 fill
                                 className="object-cover"
-                                unoptimized
                                 onError={(e) => {
-                                  const target = e.currentTarget;
-                                  target.onerror = null; // Prevent infinite loop
-                                  target.src = "/indonesian-food.jpg";
+                                  e.currentTarget.src = "/indonesian-food.jpg";
                                 }}
                               />
                             </div>
@@ -654,11 +651,8 @@ export default function Home() {
                         alt={food.name}
                         fill
                         className="object-cover"
-                        unoptimized
                         onError={(e) => {
-                          const target = e.currentTarget;
-                          target.onerror = null; // Prevent infinite loop
-                          target.src = "/indonesian-food.jpg";
+                          e.currentTarget.src = "/indonesian-food.jpg";
                         }}
                       />
                     ) : (
