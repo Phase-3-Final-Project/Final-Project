@@ -5,16 +5,23 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const island = url.searchParams.get('island');
+    const province = url.searchParams.get('province');
 
-    type Food = { _id: string | number; name?: string; origin?: { island?: string } }
+    type Food = { _id: string | number; name?: string; origin?: { island?: string; province?: string } }
+    
+    const all = await FoodModel.getAll();
+    
+    if (province) {
+      const filtered = (all as unknown as Food[]).filter((f) => f.origin?.province === province);
+      return NextResponse.json(filtered, { status: 200 });
+    }
+    
     if (island) {
-      const all = await FoodModel.getAll();
-  const filtered = (all as unknown as Food[]).filter((f) => f.origin?.island === island);
+      const filtered = (all as unknown as Food[]).filter((f) => f.origin?.island === island);
       return NextResponse.json(filtered, { status: 200 });
     }
 
-    const foods = await FoodModel.getAll();
-    return NextResponse.json(foods, { status: 200 });
+    return NextResponse.json(all, { status: 200 });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -45,7 +52,33 @@ export async function POST(req: Request) {
       flavor_notes: Array.isArray(body?.taste_profile?.flavor_notes) ? body.taste_profile.flavor_notes : [],
     };
 
-    const payload: Record<string, unknown> = {
+    interface FoodPayload {
+      name: string;
+      alternate_names: string[];
+      description: string;
+      photo: string;
+      category: string;
+      course: string;
+      origin: {
+        province: string;
+        island: string;
+        city_or_region: string;
+      };
+      serving: {
+        temperature: string;
+        accompaniments: string[];
+        portion_size: string;
+      };
+      main_ingredients: string[];
+      taste_profile: {
+        spiciness: string;
+        flavor_notes: string[];
+      };
+      model3D?: string;
+      [key: string]: unknown;
+    }
+
+    const payload: FoodPayload = {
       name: body.name,
       alternate_names,
       description: body.description,
@@ -59,10 +92,11 @@ export async function POST(req: Request) {
     };
     if (body["model3D"]) payload["model3D"] = body["model3D"];
 
-    const food = await FoodModel.insert(payload as any);
+    const food = await FoodModel.insert(payload);
     return NextResponse.json({ success: true, food });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
