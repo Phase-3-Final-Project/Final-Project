@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { toast } from "react-hot-toast";
+import { signIn } from "next-auth/react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,7 +13,7 @@ export default function Login() {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/login`, {
+      const res = await fetch(`/api/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
         headers: {
@@ -31,14 +32,14 @@ export default function Login() {
       console.log(result, "Login Success");
     } catch (err) {
       console.error((err as Error).message);
-      toast.error((err as Error).message);
+      toast.error((err as Error).message || "Login Failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F5EB] flex flex-col">
+    <div className="min-h-screen bg-[#F9F5EB] flex flex-col pt-32 pb-16">
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center px-4 mb-50">
         <div className="w-full max-w-md">
@@ -88,7 +89,7 @@ export default function Login() {
               type="submit"
               className="w-full bg-[#D35400] hover:bg-[#E0A106] text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Loading..." : "Login"}
             </button>
           </form>
           <p className="mt-4 text-center text-sm text-gray-600">

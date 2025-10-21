@@ -13,7 +13,7 @@ export default function FoodDetailPage() {
   const router = useRouter()
   const foodId = params.id as string
   type Food = {
-    id: number | string
+    _id: number | string
     name?: string
     description?: string
     photo?: string
@@ -27,14 +27,14 @@ export default function FoodDetailPage() {
   const [imageSrc, setImageSrc] = useState<string | undefined>(undefined)
   const [user, setUser] = useState<User | null>(null)
   const [isWishlisted, setIsWishlisted] = useState(false)
-  const [recommendations, setRecommendations] = useState<Array<Pick<Food, 'id' | 'name' | 'photo' | 'origin'>>>([])
+  const [recommendations, setRecommendations] = useState<Array<Pick<Food, '_id' | 'name' | 'photo' | 'origin'>>>([])
   const [userWishlist, setUserWishlist] = useState<{ id?: string; name?: string }[]>([])
 
   useEffect(() => {
     ;(async () => {
       // Fetch food from API
       try {
-        const res = await fetch(`/api/foods/${params.id}`)
+        const res = await fetch(`/api/foods/${params._id}`)
         if (res.ok) {
           const f = await res.json()
           setFood(f)
@@ -47,9 +47,9 @@ export default function FoodDetailPage() {
               const related = (await relatedRes.json()) as unknown[]
               const mapped = (related || []).map((r) => {
                 const rr = r as Food
-                return { id: rr.id, name: rr.name, photo: rr.photo, origin: rr.origin }
+                return { _id: rr._id, name: rr.name, photo: rr.photo, origin: rr.origin }
               })
-              setRecommendations(mapped.filter((r) => r.id !== f.id).slice(0, 3))
+              setRecommendations(mapped.filter((r) => r._id !== f._id).slice(0, 3))
             }
           }
         }
@@ -166,8 +166,8 @@ export default function FoodDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {recommendations.map((rec) => (
                 <Card
-                  key={rec.id}
-                  onClick={() => router.push(`/food/${rec.id}`)}
+                  key={rec._id}
+                  onClick={() => router.push(`/food/${rec._id}`)}
                   className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-white border-amber-200"
                 >
                   <div className="relative h-40 bg-gradient-to-br from-amber-100 to-orange-100">
