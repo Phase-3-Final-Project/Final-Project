@@ -117,21 +117,21 @@ export default function WishlistPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 pt-24">
-      <div className="max-w-7xl mx-auto px-4 py-4 relative">
-        <div className="absolute left-4">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <Button
             onClick={() => router.push("/")}
             variant="outline"
-            className="border-amber-300 text-amber-900 hover:bg-[#E0A106] cursor-pointer rounded-2xl"
+            className="border-amber-300 text-amber-900 hover:bg-[#E0A106] cursor-pointer rounded-2xl w-fit"
           >
             <RiArrowLeftDoubleFill className="inline-block mr-1" />{" "}
             <span>Back to Explorer</span>
           </Button>
+          <h1 className="text-2xl font-bold text-amber-900 text-center md:absolute md:left-1/2 md:-translate-x-1/2">
+            <PiBowlFoodFill className="inline-block mr-1" />
+            Saved Bites {user?.id ? `- ${user.id}` : ""}
+          </h1>
         </div>
-        <h1 className="text-2xl font-bold text-amber-900 text-center">
-          <PiBowlFoodFill className="inline-block mr-1" />
-          Saved Bites {user?.id ? `- ${user.id}` : ""}
-        </h1>
       </div>
 
       {/* Content */}
