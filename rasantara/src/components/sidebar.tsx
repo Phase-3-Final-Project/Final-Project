@@ -1,6 +1,8 @@
+import Link from "next/link";
+
 export default function Sidebar() {
   return (
-    <aside className="w-72 sticky top-0 self-start max-h-screen bg-[#FAFAFA] text-[#5C4033] border-r border-gray-200 flex flex-col">
+    <aside className="w-72 fixed top-23 self-start h-[calc(100vh-4rem)] overflow-hidden bg-[#FAFAFA] text-[#5C4033] border-r border-gray-200 flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <h2 className="text-2xl font-bold text-[#5C4033]">
@@ -14,8 +16,8 @@ export default function Sidebar() {
         <ul className="space-y-2 px-4">
           {/* Dashboard */}
           <li>
-            <a
-              href="#"
+            <Link
+              href="/admin/"
               className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-[#F9F5EB] transition-all duration-200 group"
             >
               <svg
@@ -32,13 +34,13 @@ export default function Sidebar() {
                 />
               </svg>
               <span className="font-bold text-sm">Dashboard</span>
-            </a>
+            </Link>
           </li>
 
           {/* Add Product */}
           <li>
-            <a
-              href="#"
+            <Link
+              href="/admin/add"
               className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-[#F9F5EB] transition-all duration-200 group"
             >
               <svg
@@ -55,13 +57,13 @@ export default function Sidebar() {
                 />
               </svg>
               <span className="font-bold text-sm">Add Product</span>
-            </a>
+            </Link>
           </li>
 
           {/* Image to 3D */}
           <li>
-            <a
-              href="#"
+            <Link
+              href="/admin/image-to-3d"
               className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-[#F9F5EB] transition-all duration-200 group"
             >
               <svg
@@ -78,13 +80,13 @@ export default function Sidebar() {
                 />
               </svg>
               <span className="font-bold text-sm">Image to 3D</span>
-            </a>
+            </Link>
           </li>
 
           {/* Map */}
           <li>
-            <a
-              href="#"
+            <Link
+              href="/admin/map"
               className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-[#F9F5EB] transition-all duration-200 group"
             >
               <svg
@@ -101,7 +103,7 @@ export default function Sidebar() {
                 />
               </svg>
               <span className="font-bold text-sm">Map</span>
-            </a>
+            </Link>
           </li>
         </ul>
       </nav>
