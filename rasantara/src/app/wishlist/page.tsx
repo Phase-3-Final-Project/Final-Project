@@ -22,6 +22,35 @@ export default function WishlistPage() {
 
   useEffect(() => {
     (async () => {
+      // Prefer server-side session check via cookie-backed endpoint
+      try {
+        const me = await fetch('/api/user/me')
+        if (me.ok) {
+          const body = await me.json()
+          const userData = body.user
+          setUser(userData)
+
+          // fetch enriched wishlist from API
+          const res = await fetch(`/api/user`)
+          if (res.ok) {
+            const body2 = await res.json()
+            type Enriched = { wishlistId?: string; food?: { id?: string; name?: string; photo?: string; description?: string; origin?: { province?: string; island?: string } } }
+            const foods = (body2.wishlist || [])
+              .map((w: unknown): Enriched['food'] | undefined => {
+                if (typeof w === 'object' && w !== null && 'food' in w) return (w as Enriched).food
+                return undefined
+              })
+              .filter((f: Enriched['food'] | undefined): f is Enriched['food'] => !!f)
+            setWishlistFoods(foods)
+          }
+          return
+        }
+      } catch (err) {
+        // fallthrough to localStorage demo fallback below
+        console.warn('Server-side session check failed, falling back to client storage', err)
+      }
+
+      // Fallback: demo/local user stored in localStorage (for dev/demo without auth)
       const storedUser = localStorage.getItem("user")
       if (!storedUser) {
         router.push("/auth/login")
@@ -35,7 +64,6 @@ export default function WishlistPage() {
         const res = await fetch(`/api/user`)
         if (res.ok) {
           const body = await res.json()
-          // body.wishlist is an array of { wishlistId, food }
           type Enriched = { wishlistId?: string; food?: { id?: string; name?: string; photo?: string; description?: string; origin?: { province?: string; island?: string } } }
           const foods = (body.wishlist || [])
             .map((w: unknown): Enriched['food'] | undefined => {
