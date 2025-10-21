@@ -30,10 +30,7 @@ export async function GET() {
     }
     
     if (!userId) return NextResponse.json({ error: 'No user' }, { status: 401 });
-
-    console.log('Fetching wishlist for userId:', userId);
     const wishlist = await WishlistModel.findByUserId(userId);
-    console.log('Raw wishlist from DB:', wishlist);
 
     // enrich wishlist items with food details
   type WishlistDoc = { _id?: { toString?: () => string }; foodId?: { toString?: () => string } | string };
