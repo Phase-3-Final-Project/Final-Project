@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { useSession, signOut } from "next-auth/react";
 import { IoHome } from "react-icons/io5";
 import { GiSelfLove } from "react-icons/gi";
 import { IoLogIn } from "react-icons/io5";
@@ -12,12 +13,44 @@ import { RiDashboardFill } from "react-icons/ri";
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session, status } = useSession(); // NextAuth session untuk Google Sign-In
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const isLoginPage = pathname === "/login";
 
   useEffect(() => {
     const checkLoginAndRole = async () => {
+      // Check untuk NextAuth session (Google Sign-In)
+      if (status === "authenticated" && session) {
+        setIsLoggedIn(true);
+        
+        // Sync session dengan Authorization cookie
+        try {
+          await fetch("/api/auth/sync");
+        } catch (error) {
+          console.error("Error syncing session:", error);
+        }
+        
+        // Get role from session atau fetch dari API
+        const role = (session as any).user?.role;
+        if (role) {
+          setUserRole(role);
+        } else {
+          // Fallback: fetch dari API
+          try {
+            const response = await fetch("/api/user/me");
+            if (response.ok) {
+              const data = await response.json();
+              setUserRole(data.user?.role || null);
+            }
+          } catch (error) {
+            console.error("Error fetching user role:", error);
+          }
+        }
+        return;
+      }
+
+      // Check untuk cookie-based auth (login biasa)
       const cookies = document.cookie.split("; ");
       const authCookie = cookies.find(cookie => cookie.startsWith("Authorization="));
       setIsLoggedIn(!!authCookie);
@@ -38,14 +71,23 @@ export default function Navbar() {
     };
 
     checkLoginAndRole();
-  }, []);
+  }, [session, status]);
 
-  const handleLogout = () => {
-    document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    setIsLoggedIn(false);
-    setUserRole(null);
-    toast.success("Logged out successfully");
-    router.push("/");
+  const handleLogout = async () => {
+    // Check if logged in via NextAuth (Google)
+    if (status === "authenticated") {
+      // Clear Authorization cookie
+      document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      await signOut({ callbackUrl: "/" });
+      toast.success("Logged out successfully");
+    } else {
+      // Cookie-based logout (login biasa)
+      document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      setIsLoggedIn(false);
+      setUserRole(null);
+      toast.success("Logged out successfully");
+      router.push("/");
+    }
   };
 
   return (
