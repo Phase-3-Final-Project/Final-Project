@@ -39,7 +39,7 @@ export default function Footer() {
 
           {/* Contact/Info Section */}
           <div className="flex flex-col items-center sm:items-start space-y-2 flex-1 sm:justify-end">
-            <h4 className="font-semibold text-[#5C4033] text-sm mb-1">Connect</h4>
+            <h4 className="font-semibold text-[#5C4033] text-sm mb-1">Collaboration</h4>
             <p className="text-xs text-gray-500 text-center sm:text-left">
               h8.rmt.065@gmail.com
             </p>

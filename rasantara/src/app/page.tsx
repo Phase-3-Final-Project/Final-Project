@@ -375,7 +375,7 @@ export default function Home() {
   }, {} as Record<string, FoodItem[]>);
 
   return (
-    <div className="w-full h-screen overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col fixed inset-0">
+    <div className="w-full min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col">
       {/* Sidebar Toggle Button */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -422,7 +422,7 @@ export default function Home() {
           {/* Search Bar */}
           <input
             type="text"
-            placeholder="Cari makanan..."
+            placeholder="Search food..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 rounded-lg bg-white/90 text-amber-900 placeholder-amber-600 focus:outline-none focus:ring-2 focus:ring-white"
@@ -435,18 +435,18 @@ export default function Home() {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="px-3 py-2 rounded-lg bg-white/90 text-amber-900 text-sm focus:outline-none focus:ring-2 focus:ring-white"
             >
-              <option value="">Semua Kategori</option>
-              <option value="Hidangan Utama">Hidangan Utama</option>
-              <option value="Kue Tradisional">Kue Tradisional</option>
-              <option value="Sup">Sup</option>
-              <option value="Lauk">Lauk</option>
-              <option value="Camilan">Camilan</option>
+              <option value="">All Categories</option>
+              <option value="Hidangan Utama">Main Dish</option>
+              <option value="Kue Tradisional">Traditional Cake</option>
+              <option value="Sup">Soup</option>
+              <option value="Lauk">Side Dish</option>
+              <option value="Camilan">Snack</option>
               <option value="Seafood">Seafood</option>
-              <option value="Gulai">Gulai</option>
-              <option value="Roti">Roti</option>
-              <option value="Pendamping">Pendamping</option>
-              <option value="Bumbu">Bumbu</option>
-              <option value="Sambal">Sambal</option>
+              <option value="Gulai">Curry</option>
+              <option value="Roti">Bread</option>
+              <option value="Pendamping">Accompaniment</option>
+              <option value="Bumbu">Spice</option>
+              <option value="Sambal">Chili Sauce</option>
             </select>
 
             <select
@@ -454,28 +454,28 @@ export default function Home() {
               onChange={(e) => setSelectedCourse(e.target.value)}
               className="px-3 py-2 rounded-lg bg-white/90 text-amber-900 text-sm focus:outline-none focus:ring-2 focus:ring-white"
             >
-              <option value="">Semua Course</option>
-              <option value="Sarapan">Sarapan</option>
-              <option value="Makan Siang">Makan Siang</option>
-              <option value="Makan Malam">Makan Malam</option>
-              <option value="Camilan">Camilan</option>
-              <option value="Hidangan Penutup">Hidangan Penutup</option>
-              <option value="Jajanan">Jajanan</option>
-              <option value="Jamuan">Jamuan</option>
-              <option value="Acara Adat">Acara Adat</option>
-              <option value="Pesta">Pesta</option>
-              <option value="Perayaan">Perayaan</option>
-              <option value="Kenduri">Kenduri</option>
-              <option value="Bekal">Bekal</option>
-              <option value="Pendamping">Pendamping</option>
-              <option value="Oleh-oleh">Oleh-oleh</option>
-              <option value="Hari Raya">Hari Raya</option>
-              <option value="Acara Khusus">Acara Khusus</option>
+              <option value="">All Courses</option>
+              <option value="Sarapan">Breakfast</option>
+              <option value="Makan Siang">Lunch</option>
+              <option value="Makan Malam">Dinner</option>
+              <option value="Camilan">Snack</option>
+              <option value="Hidangan Penutup">Dessert</option>
+              <option value="Jajanan">Street Food</option>
+              <option value="Jamuan">Banquet</option>
+              <option value="Acara Adat">Traditional Event</option>
+              <option value="Pesta">Party</option>
+              <option value="Perayaan">Celebration</option>
+              <option value="Kenduri">Feast</option>
+              <option value="Bekal">Packed Meal</option>
+              <option value="Pendamping">Accompaniment</option>
+              <option value="Oleh-oleh">Souvenir</option>
+              <option value="Hari Raya">Holiday</option>
+              <option value="Acara Khusus">Special Event</option>
             </select>
           </div>
 
           <p className="text-amber-100 text-sm mt-3">
-            {filteredFoods.length} makanan ditemukan
+            {filteredFoods.length} food(s) found
           </p>
         </div>
 
@@ -540,10 +540,10 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <PiBowlFoodFill className="text-6xl text-amber-300 mb-4" />
               <p className="text-amber-800 text-lg font-semibold mb-2">
-                Tidak ada makanan ditemukan
+                No food found
               </p>
               <p className="text-amber-600 text-sm">
-                Coba ubah filter atau kata kunci pencarian
+                Try changing the filter or search keyword
               </p>
             </div>
           )}
@@ -552,8 +552,8 @@ export default function Home() {
 
       {/* Main Content Area - fills space with navbar padding */}
       <div className="flex-1 flex flex-col pt-24 pb-0">
-        {/* Map Container - takes about 80% of available space */}
-        <div className="relative w-full flex-[89.2]">
+        {/* Map Container */}
+        <div className="relative w-full h-[70vh] md:h-[80vh]">
           <div ref={mapContainerRef} className="w-full h-full" />
 
           {/* Loading Indicator */}
@@ -571,14 +571,14 @@ export default function Home() {
             <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border-2 border-amber-200 z-10">
               <p className="text-amber-900 font-semibold text-sm flex items-center gap-2">
                 <PiBowlFoodFill className="text-xl text-amber-600" />
-                Klik marker provinsi untuk melihat makanan khas
+                Click province marker to view local food
               </p>
             </div>
           )}
         </div>
 
-        {/* Banner Section - takes about 20% of available space, text centered vertically */}
-        <div className="relative w-full flex-[10.8] overflow-hidden">
+        {/* Banner Section */}
+        <div className="relative w-full h-[30vh] md:h-[40vh] overflow-hidden">
           <Image
             src="/Copilot_20251021_192423.png"
             alt="Rasantara - Satu platform, Seribu Rasa"
@@ -615,7 +615,7 @@ export default function Home() {
                 {selectedProvince}
               </h2>
               <p className="text-amber-100 text-sm mt-1">
-                {provinceFoods.length} makanan khas ditemukan
+                {provinceFoods.length} local food(s) found
               </p>
             </div>
             <Button
@@ -684,10 +684,10 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <PiBowlFoodFill className="text-6xl text-amber-300 mb-4" />
               <p className="text-amber-800 text-lg font-semibold mb-2">
-                Belum ada makanan khas
+                No local food yet
               </p>
               <p className="text-amber-600 text-sm">
-                Data makanan dari {selectedProvince} belum tersedia
+                Food data from {selectedProvince} is not yet available
               </p>
             </div>
           )}
