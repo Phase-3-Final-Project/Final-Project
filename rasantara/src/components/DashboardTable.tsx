@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import View3DModal from "./View3DModal";
+import DeleteButton from "./DeleteButton";
 
 interface FoodData {
   _id: string;
@@ -71,7 +72,7 @@ export default function DashboardTable({
                   key={food._id}
                   className="hover:bg-[#FFF8F0] border-b border-gray-100"
                 >
-                  <td className="text-center py-3 px-4 text-base">
+                  <td className="text-center py-3 px-4 text-base text-black font-semibold">
                     {startIndex + index + 1}
                   </td>
                   <td className="font-semibold text-black py-3 px-4 text-base">
@@ -165,23 +166,7 @@ export default function DashboardTable({
                         </svg>
                         Update
                       </button>
-                      <button className="px-3 py-1.5 bg-pink-500 hover:bg-pink-600 text-white text-sm font-medium rounded flex items-center gap-1 transition-colors">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                        Delete
-                      </button>
+                      <DeleteButton foodId={food._id} foodName={food.name} />
                     </div>
                   </td>
                 </tr>

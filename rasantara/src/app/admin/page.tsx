@@ -34,11 +34,12 @@ async function getFoods(): Promise<FoodData[]> {
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }) {
   const foodsData = await getFoods();
   const itemsPerPage = 8;
-  const currentPage = Number(searchParams.page) || 1;
+  const params = await searchParams;
+  const currentPage = Number(params.page) || 1;
 
   return (
     <div className="min-h-screen bg-[#F9F5EB]">
