@@ -24,10 +24,11 @@ class FoodModel {
     return { _id: result.insertedId, ...food };
   }
 
-  static async getAll() {
-    const foods = await this.collection().find({}).toArray();
-    return foods;
-  }
+static async getAll() {
+  const foods = await this.collection().find({}).sort({ _id: -1 }).toArray();
+
+  return foods;
+}
 
   static async getBySlug(slug: string) {
     const food = await this.collection().findOne({ slug: slug });
