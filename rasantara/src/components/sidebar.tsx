@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Sidebar() {
   return (
-    <aside className="w-72 fixed top-23 self-start h-[calc(100vh-4rem)] overflow-hidden bg-[#FAFAFA] text-[#5C4033] border-r border-gray-200 flex flex-col">
+    <aside className="w-72 fixed top-23 self-start h-[calc(100vh-4rem)] overflow-hidden bg-[#FAFAFA] text-[#5C4033] border-r border-[#FAFAFA] flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <h2 className="text-2xl font-bold text-[#5C4033]">

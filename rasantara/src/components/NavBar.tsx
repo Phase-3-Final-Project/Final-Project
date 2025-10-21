@@ -23,14 +23,14 @@ export default function Navbar() {
       // Check untuk NextAuth session (Google Sign-In)
       if (status === "authenticated" && session) {
         setIsLoggedIn(true);
-        
+
         // Sync session dengan Authorization cookie
         try {
           await fetch("/api/auth/sync");
         } catch (error) {
           console.error("Error syncing session:", error);
         }
-        
+
         // Get role from session atau fetch dari API
         const role = (session as any).user?.role;
         if (role) {
@@ -52,7 +52,9 @@ export default function Navbar() {
 
       // Check untuk cookie-based auth (login biasa)
       const cookies = document.cookie.split("; ");
-      const authCookie = cookies.find(cookie => cookie.startsWith("Authorization="));
+      const authCookie = cookies.find((cookie) =>
+        cookie.startsWith("Authorization=")
+      );
       setIsLoggedIn(!!authCookie);
 
       if (authCookie) {
@@ -77,12 +79,14 @@ export default function Navbar() {
     // Check if logged in via NextAuth (Google)
     if (status === "authenticated") {
       // Clear Authorization cookie
-      document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       await signOut({ callbackUrl: "/" });
       toast.success("Logged out successfully");
     } else {
       // Cookie-based logout (login biasa)
-      document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       setIsLoggedIn(false);
       setUserRole(null);
       toast.success("Logged out successfully");
@@ -91,7 +95,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full z-50 bg-transparent flex flex-col px-8 h-24 pb-2 justify-between md:flex-row items-center">
+    <div className="fixed top-0 left-0 w-full z-50 bg-white/30 backdrop-blur-md border-b border-white/20 flex flex-col px-8 h-24 pb-2 justify-between md:flex-row items-center">
       <div className="flex items-center space-x-6 md:space-x-8">
         <Link href="/" className="block">
           <img
@@ -102,12 +106,12 @@ export default function Navbar() {
           />
         </Link>
         <Link
-            href="/"
-            className="flex flex-col items-center text-[#5C4033] hover:text-black"
-          >
-            <IoHome />
-            <p>Home</p>
-          </Link>
+          href="/"
+          className="flex flex-col items-center text-[#5C4033] hover:text-black"
+        >
+          <IoHome />
+          <p>Home</p>
+        </Link>
         <Link
           href="/wishlist"
           className="flex flex-col items-center text-[#5C4033] hover:text-black"
