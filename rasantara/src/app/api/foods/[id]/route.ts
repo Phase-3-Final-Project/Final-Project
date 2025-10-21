@@ -2,9 +2,9 @@ import FoodModel from '@/db/models/FoodModel';
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     let food;
     
