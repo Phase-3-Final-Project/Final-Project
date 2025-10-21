@@ -27,6 +27,7 @@ export default function FoodDetailPage() {
   const [imageSrc, setImageSrc] = useState<string | undefined>(undefined)
   const [user, setUser] = useState<User | null>(null)
   const [isWishlisted, setIsWishlisted] = useState(false)
+  const [currentWishlistId, setCurrentWishlistId] = useState<string | null>(null)
   const [recommendations, setRecommendations] = useState<Array<Pick<Food, '_id' | 'name' | 'photo' | 'origin'>>>([])
   const [userWishlist, setUserWishlist] = useState<{ id?: string; name?: string }[]>([])
 
@@ -34,7 +35,7 @@ export default function FoodDetailPage() {
     ;(async () => {
       // Fetch food from API
       try {
-        const res = await fetch(`/api/foods/${params._id}`)
+        const res = await fetch(`/api/foods/${foodId}`)
         if (res.ok) {
           const f = await res.json()
           setFood(f)
@@ -57,7 +58,40 @@ export default function FoodDetailPage() {
         console.error(err)
       }
 
-      // Load user from localStorage and fetch wishlist/history from API if present
+      // Load user from session (cookie-based) or localStorage
+      try {
+        const me = await fetch('/api/user/me')
+        if (me.ok) {
+          const body = await me.json()
+          const userData = body.user
+          setUser(userData)
+
+          // Fetch wishlist
+          const ures = await fetch(`/api/user`)
+          if (ures.ok) {
+            const body2 = await ures.json()
+            type WishlistItem = { wishlistId?: string; food?: { id?: string; _id?: string; name?: string } }
+            const wishlistItems = (body2.wishlist || []) as WishlistItem[]
+            const wishlistFoods = wishlistItems.map((w) => ({ id: w.food?.id || w.food?._id, name: w.food?.name }))
+            setUserWishlist(wishlistFoods)
+            
+            // Check if current food is in wishlist
+            const currentFoodInWishlist = wishlistItems.find((w) => {
+              const wFoodId = w.food?.id || w.food?._id
+              return wFoodId && String(wFoodId) === String(foodId)
+            })
+            if (currentFoodInWishlist) {
+              setIsWishlisted(true)
+              setCurrentWishlistId(currentFoodInWishlist.wishlistId || null)
+            }
+          }
+          return
+        }
+      } catch (err) {
+        console.warn('Server-side session check failed, falling back to localStorage', err)
+      }
+
+      // Fallback: Load user from localStorage
       const storedUser = localStorage.getItem("user")
       if (storedUser) {
         const parsed = JSON.parse(storedUser)
@@ -66,8 +100,20 @@ export default function FoodDetailPage() {
           const ures = await fetch(`/api/user`)
           if (ures.ok) {
             const body = await ures.json()
-            const wishlistFoods = (body.wishlist || []).map((w: { foodId: string; foodName?: string }) => ({ id: w.foodId, name: w.foodName }))
+            type WishlistItem = { wishlistId?: string; food?: { id?: string; _id?: string; name?: string } }
+            const wishlistItems = (body.wishlist || []) as WishlistItem[]
+            const wishlistFoods = wishlistItems.map((w) => ({ id: w.food?.id || w.food?._id, name: w.food?.name }))
             setUserWishlist(wishlistFoods)
+            
+            // Check if current food is in wishlist
+            const currentFoodInWishlist = wishlistItems.find((w) => {
+              const wFoodId = w.food?.id || w.food?._id
+              return wFoodId && String(wFoodId) === String(foodId)
+            })
+            if (currentFoodInWishlist) {
+              setIsWishlisted(true)
+              setCurrentWishlistId(currentFoodInWishlist.wishlistId || null)
+            }
           }
         } catch (err) {
           console.error(err)
@@ -76,12 +122,45 @@ export default function FoodDetailPage() {
     })()
   }, [foodId, params.id])
 
-  const handleWishlistToggle = () => {
+  const handleWishlistToggle = async () => {
     if (!user) {
       router.push("/auth/login")
       return
     }
-    setIsWishlisted(!isWishlisted)
+
+    try {
+      if (isWishlisted && currentWishlistId) {
+        // Remove from wishlist
+        const res = await fetch('/api/wishlist', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wishlistId: currentWishlistId }),
+        })
+        if (res.ok) {
+          setIsWishlisted(false)
+          setCurrentWishlistId(null)
+        }
+      } else {
+        // Add to wishlist
+        console.log('Adding to wishlist, food._id:', food?._id, 'type:', typeof food?._id);
+        const res = await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ foodId: String(food?._id) }),
+        })
+        if (res.ok) {
+          const result = await res.json();
+          console.log('Added to wishlist:', result);
+          setIsWishlisted(true)
+          // Optionally refetch to get the new wishlistId (not critical for now)
+        } else {
+          const error = await res.json();
+          console.error('Failed to add to wishlist:', error);
+        }
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err)
+    }
   }
 
   if (!food) {

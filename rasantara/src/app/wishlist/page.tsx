@@ -15,13 +15,47 @@ type Food = {
   origin?: { province?: string; island?: string }
 }
 
+type WishlistItem = {
+  wishlistId?: string
+  food?: Food
+}
+
 export default function WishlistPage() {
   const router = useRouter()
-  const [wishlistFoods, setWishlistFoods] = useState<Food[]>([])
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [user, setUser] = useState<{ id: string } | null>(null)
 
   useEffect(() => {
     (async () => {
+      // Prefer server-side session check via cookie-backed endpoint
+      try {
+        const me = await fetch('/api/user/me')
+        if (me.ok) {
+          const body = await me.json()
+          const userData = body.user
+          setUser(userData)
+
+          // fetch enriched wishlist from API
+          const res = await fetch(`/api/user`)
+          if (res.ok) {
+            const body2 = await res.json()
+            type Enriched = { wishlistId?: string; food?: { id?: string; name?: string; photo?: string; description?: string; origin?: { province?: string; island?: string } } }
+            const items = (body2.wishlist || [])
+              .map((w: unknown): Enriched | undefined => {
+                if (typeof w === 'object' && w !== null && 'food' in w) return (w as Enriched)
+                return undefined
+              })
+              .filter((item: Enriched | undefined): item is Enriched => !!item && !!item.food)
+            setWishlistItems(items)
+          }
+          return
+        }
+      } catch (err) {
+        // fallthrough to localStorage demo fallback below
+        console.warn('Server-side session check failed, falling back to client storage', err)
+      }
+
+      // Fallback: demo/local user stored in localStorage (for dev/demo without auth)
       const storedUser = localStorage.getItem("user")
       if (!storedUser) {
         router.push("/auth/login")
@@ -35,15 +69,14 @@ export default function WishlistPage() {
         const res = await fetch(`/api/user`)
         if (res.ok) {
           const body = await res.json()
-          // body.wishlist is an array of { wishlistId, food }
           type Enriched = { wishlistId?: string; food?: { id?: string; name?: string; photo?: string; description?: string; origin?: { province?: string; island?: string } } }
-          const foods = (body.wishlist || [])
-            .map((w: unknown): Enriched['food'] | undefined => {
-              if (typeof w === 'object' && w !== null && 'food' in w) return (w as Enriched).food
+          const items = (body.wishlist || [])
+            .map((w: unknown): Enriched | undefined => {
+              if (typeof w === 'object' && w !== null && 'food' in w) return (w as Enriched)
               return undefined
             })
-            .filter((f: Enriched['food'] | undefined): f is Enriched['food'] => !!f)
-          setWishlistFoods(foods)
+            .filter((item: Enriched | undefined): item is Enriched => !!item && !!item.food)
+          setWishlistItems(items)
         }
       } catch (err) {
         console.error(err)
@@ -69,35 +102,40 @@ export default function WishlistPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {wishlistFoods.length > 0 ? (
+        {wishlistItems.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {wishlistFoods.map((food) => (
-              <Card
-                  key={`${food.id ?? food.name ?? ''}`}
+            {wishlistItems.map((item) => {
+              const food = item.food
+              if (!food) return null
+              
+              return (
+                <Card
+                  key={item.wishlistId || `food-${food.id || food.name}`}
                   onClick={() => router.push(`/food/${food.id ?? ''}`)}
-                className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-white border-amber-200"
-              >
-                <div className="relative h-48 bg-gradient-to-br from-amber-100 to-orange-100">
-                  <Image
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-white border-amber-200"
+                >
+                  <div className="relative h-48 bg-gradient-to-br from-amber-100 to-orange-100">
+                    <Image
                       src={food.photo || "/placeholder.svg"}
                       alt={food.name ?? ''}
-                    fill
-                    className="object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/indonesian-food.jpg"
-                    }}
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-lg text-amber-900 mb-2">{food.name}</h3>
-                  <p className="text-sm text-amber-700 line-clamp-2 mb-3">{food.description}</p>
-                  <div className="flex items-center justify-between text-xs text-amber-600">
+                      fill
+                      className="object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/indonesian-food.jpg"
+                      }}
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg text-amber-900 mb-2">{food.name}</h3>
+                    <p className="text-sm text-amber-700 line-clamp-2 mb-3">{food.description}</p>
+                    <div className="flex items-center justify-between text-xs text-amber-600">
                       <span>📍 {food.origin?.province ?? ''}</span>
                       <span className="bg-amber-100 px-2 py-1 rounded-full">{food.origin?.island ?? ''}</span>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-12">

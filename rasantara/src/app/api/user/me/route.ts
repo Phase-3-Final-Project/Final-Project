@@ -24,11 +24,18 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Return user data without password
-    const { password, ...safeUserData } = user as any;
+    // Return user data without password (safely)
+    const userObj = user as Record<string, unknown> | null;
+    if (!userObj) return NextResponse.json({ error: 'User data invalid' }, { status: 500 });
+    const safeUserData = { ...userObj } as Record<string, unknown>;
+    if (Object.prototype.hasOwnProperty.call(safeUserData, 'password')) {
+      // remove sensitive field if present in a type-safe way
+      delete safeUserData['password'];
+    }
     return NextResponse.json({ user: safeUserData }, { status: 200 });
   } catch (err) {
     console.error("Error in /api/user/me:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
