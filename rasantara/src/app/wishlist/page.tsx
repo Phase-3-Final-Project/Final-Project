@@ -29,64 +29,23 @@ export default function WishlistPage() {
 
   useEffect(() => {
     (async () => {
-      // Prefer server-side session check via cookie-backed endpoint
+      // Check authentication via cookie-backed endpoint
       try {
         const me = await fetch("/api/user/me");
-        if (me.ok) {
-          const body = await me.json();
-          const userData = body.user;
-          setUser(userData);
-
-          // fetch enriched wishlist from API
-          const res = await fetch(`/api/user`);
-          if (res.ok) {
-            const body2 = await res.json();
-            type Enriched = {
-              wishlistId?: string;
-              food?: {
-                id?: string;
-                name?: string;
-                photo?: string;
-                description?: string;
-                origin?: { province?: string; island?: string };
-              };
-            };
-            const items = (body2.wishlist || [])
-              .map((w: unknown): Enriched | undefined => {
-                if (typeof w === "object" && w !== null && "food" in w)
-                  return w as Enriched;
-                return undefined;
-              })
-              .filter(
-                (item: Enriched | undefined): item is Enriched =>
-                  !!item && !!item.food
-              );
-            setWishlistItems(items);
-          }
+        if (!me.ok) {
+          // Jika tidak ada session/cookie, redirect ke login
+          router.push("/login");
           return;
         }
-      } catch (err) {
-        // fallthrough to localStorage demo fallback below
-        console.warn(
-          "Server-side session check failed, falling back to client storage",
-          err
-        );
-      }
 
-      // Fallback: demo/local user stored in localStorage (for dev/demo without auth)
-      const storedUser = localStorage.getItem("user");
-      if (!storedUser) {
-        router.push("/auth/login");
-        return;
-      }
+        const body = await me.json();
+        const userData = body.user;
+        setUser(userData);
 
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-
-      try {
+        // Fetch enriched wishlist from API
         const res = await fetch(`/api/user`);
         if (res.ok) {
-          const body = await res.json();
+          const body2 = await res.json();
           type Enriched = {
             wishlistId?: string;
             food?: {
@@ -97,7 +56,7 @@ export default function WishlistPage() {
               origin?: { province?: string; island?: string };
             };
           };
-          const items = (body.wishlist || [])
+          const items = (body2.wishlist || [])
             .map((w: unknown): Enriched | undefined => {
               if (typeof w === "object" && w !== null && "food" in w)
                 return w as Enriched;
@@ -110,7 +69,9 @@ export default function WishlistPage() {
           setWishlistItems(items);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching user/wishlist:", err);
+        // Jika terjadi error, redirect ke login
+        router.push("/login");
       }
     })();
   }, [router]);
