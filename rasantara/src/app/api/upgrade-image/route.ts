@@ -28,45 +28,59 @@ export async function POST(req: NextRequest) {
     console.log("ARK_API_KEY length:", ARK_API_KEY?.length);
     console.log("ARK_API_KEY format:", ARK_API_KEY?.substring(0, 8) + "...");
     console.log("Image URL:", imageUrl);
+    console.log("Endpoint:", ARK_API_URL);
 
-    // Professional food photography enhancement prompt
-    const prompt = `You are a professional food photography AI expert. Analyze this food image and provide AGGRESSIVE enhancement values to transform it into PERFECT professional studio-quality food photography like Michelin-star restaurant menus.
+    // Professional food photography enhancement prompt optimized for 3D generation
+    const prompt = `Transform this food image into PERFECT professional 3D-ready food photography with these CRITICAL requirements:
 
-CRITICAL TARGET REQUIREMENTS (MUST ACHIEVE):
-✓ PURE WHITE BACKGROUND (RGB 255,255,255) - like professional product photography
-✓ Professional 3/4 side view composition
-✓ Studio lighting: bright, clean, appetizing
-✓ MAXIMUM detail and sharpness on food
-✓ Vibrant but natural food colors
-✓ Zero shadows on background
-✓ Perfect for 3D model generation
+🎯 PRIMARY REQUIREMENT - 3/4 SIDE VIEW ANGLE (CRITICAL FOR 3D):
+✓ MUST show the food from a 45-degree angle (3/4 view)
+✓ NEVER top-down view or straight front view
+✓ Show depth, height, and layers of the food
+✓ Visible side profile showing food structure and thickness
+✓ Camera angle slightly above eye level (15-30 degrees)
+✓ This angle is ESSENTIAL for successful 3D model generation
 
-ANALYSIS REQUIREMENTS - BE AGGRESSIVE WITH VALUES:
+🎨 VISUAL REQUIREMENTS FOR 3D SCANNING:
+✓ PURE WHITE BACKGROUND (RGB 255,255,255) - completely clean, no shadows
+✓ Even, diffused studio lighting from multiple angles
+✓ No harsh shadows or dark areas that block details
+✓ Maximum visible surface area of the food
+✓ Clear separation between food and background
+✓ All textures and details clearly visible
 
-1. Background Enhancement (CRITICAL):
-   - makeWhite: ALWAYS true for clean studio look
-   - whiteLevel: 100 (maximum)
-   - backgroundBrightness: 100 (brightest)
+📸 COMPOSITION FOR 3D MODEL:
+✓ Food centered but showing dimensional depth
+✓ Entire dish visible with no cropping
+✓ Space around the food for clean background
+✓ Multiple layers/components clearly distinguishable
+✓ Height and volume clearly represented
+✓ Natural presentation on appropriate serving vessel
 
-2. Lighting & Brightness (BOOST HEAVILY):
-   - brightness: Recommend +30 to +60 for darker images
-   - shadows: 80-100 (lighten shadows significantly)
-   - highlights: +20 to +40 (boost highlights for pop)
+💡 LIGHTING & ENHANCEMENT (AGGRESSIVE):
+✓ Brightness: +40 to +70 (very bright, studio quality)
+✓ Shadows: 90-100 (eliminate all dark shadows)
+✓ Highlights: +30 to +50 (bright, appetizing highlights)
+✓ Contrast: +35 to +50 (strong definition between elements)
+✓ Saturation: +30 to +45 (vibrant, appetizing colors)
+✓ Sharpness: 90-100 (maximum detail and clarity)
+✓ Clarity: 85-100 (enhanced texture and detail)
 
-3. Color & Vibrancy (MAKE FOOD APPETIZING):
-   - contrast: +30 to +45 (strong contrast for definition)
-   - saturation: +25 to +40 (vibrant but not artificial)
-   - warmth: +15 to +30 (warm, appetizing tones for food)
-   - vibrance: 35-50 (maximum vibrancy for muted colors)
+🍽️ FOOD-SPECIFIC OPTIMIZATION:
+✓ Enhance natural food colors (not artificial)
+✓ Show moisture, texture, and freshness
+✓ Emphasize layers, toppings, and garnishes
+✓ Warm color temperature (+20 to +35) for appetizing look
+✓ Preserve authentic Indonesian food appearance
 
-4. Detail & Sharpness (MAXIMUM CLARITY):
-   - sharpness: 80-100 (very sharp, crisp details)
-   - clarity: 75-95 (maximum detail enhancement)
+⚠️ CRITICAL REMINDERS:
+1. The 3/4 side view angle is NON-NEGOTIABLE - this is the ONLY angle that works for 3D generation
+2. If current image is top-down, recompose to show side profile
+3. If current image is flat/straight-on, add dimensional perspective
+4. Background MUST be pure white with zero shadows
+5. All food details must be clearly visible for 3D reconstruction
 
-5. Food Identification:
-   - Identify the Indonesian food name accurately
-
-IMPORTANT: Give STRONG values to achieve dramatic improvement. Don't be conservative! Transform this into professional food photography with pure white background, studio lighting, and maximum appetizing appeal.`;
+Transform this image following ALL requirements above, prioritizing the 3/4 side view angle for optimal 3D model generation.`;
 
     // Call ByteDance SeedDream API
     // For image-to-image enhancement, include the image field

@@ -35,6 +35,7 @@ function UpdateForm() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string>("");
+  const [upgradedImageUrl, setUpgradedImageUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -146,9 +147,13 @@ function UpdateForm() {
     const loadingToast = toast.loading("Mengupdate food...");
 
     try {
-      // Prepare photo: if file selected -> base64, else use existing URL or preview
+      // Prepare photo: prioritize upgraded image, then file, then URL, then existing preview
       let photoValue: string | null = null;
-      if (photoFile) {
+      
+      // Use upgraded image if available
+      if (upgradedImageUrl.trim()) {
+        photoValue = upgradedImageUrl.trim();
+      } else if (photoFile) {
         photoValue = await fileToDataUrlResized(photoFile, 1024, 0.85);
       } else if (photoUrl.trim()) {
         photoValue = photoUrl.trim();
@@ -309,6 +314,8 @@ function UpdateForm() {
               photoUrl={photoUrl}
               onFileChange={handlePhotoChange}
               onUrlChange={setPhotoUrl}
+              upgradedImageUrl={upgradedImageUrl}
+              onUpgradedImageChange={setUpgradedImageUrl}
             />
 
             {isValid3DModelUrl(modelUrl) && proxiedModelUrl && (
@@ -362,7 +369,7 @@ function UpdateForm() {
               </div>
               <Generate3D
                 photoFile={photoFile}
-                photoUrl={photoUrl || photoPreview}
+                photoUrl={upgradedImageUrl || photoUrl || photoPreview}
                 onModelUrlChange={setModelUrl}
               />
             </div>
