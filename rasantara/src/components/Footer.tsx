@@ -12,7 +12,7 @@ export default function Footer() {
           <div className="flex flex-col items-center sm:items-start space-y-2 flex-1">
             <h3 className="text-lg font-bold text-[#5C4033]">Rasantara</h3>
             <p className="text-sm text-gray-600 text-center sm:text-left max-w-xs">
-              Explore the richness of Indonesian cuisine through interactive 3D technology
+              Discover Indonesia’s culinary heritage through immersive maps and AI-powered visuals. Where technology meets tradition on your plate.
             </p>
           </div>
 
