@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { fileToDataUrlResized, dataUrlToBlob } from "@/helpers/imageUtils";
+import { isValid3DModelUrl } from "@/helpers/validate3DModel";
 
 interface Generate3DProps {
   photoFile: File | null;
@@ -169,7 +170,13 @@ export default function Generate3D({
               if (candidate && !model_url) {
                 model_url = candidate;
                 onModelUrlChange(candidate);
-                setMeshLogs((p) => [...p, `🎨 Model URL ready`]);
+                
+                // Validate the captured URL
+                if (isValid3DModelUrl(candidate)) {
+                  setMeshLogs((p) => [...p, `🎨 Model URL ready`]);
+                } else {
+                  setMeshLogs((p) => [...p, `⚠️ URL captured but invalid format (must be .glb or .gltf)`]);
+                }
               }
               if (isDone && !model_url) {
                 // finished but no url seen; keep reading remaining events
@@ -289,7 +296,14 @@ export default function Generate3D({
               null;
             if (candidate) {
               onModelUrlChange(candidate);
-              setMeshLogs((p) => [...p, "🎨 Model URL ready (polled)"]);
+              
+              // Validate the polled URL
+              if (isValid3DModelUrl(candidate)) {
+                setMeshLogs((p) => [...p, "🎨 Model URL ready (polled)"]);
+              } else {
+                setMeshLogs((p) => [...p, "⚠️ URL found but invalid format (must be .glb or .gltf)"]);
+              }
+              
               found = true;
               break;
             }

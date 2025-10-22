@@ -1,7 +1,7 @@
 "use client";
 
-import React, { Suspense, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import FormInput from "@/components/forms/FormInput";
 import ArrayInputField from "@/components/forms/ArrayInputField";
 import PhotoUpload from "@/components/forms/PhotoUpload";
@@ -9,9 +9,13 @@ import Generate3D from "@/components/forms/Generate3D";
 import ModelViewer from "@/components/ModelViewer";
 import { fileToDataUrlResized } from "@/helpers/imageUtils";
 import { isValid3DModelUrl } from "@/helpers/validate3DModel";
+import toast from "react-hot-toast";
 
-export default function Add() {
+function UpdateForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+
   const [name, setName] = useState("");
   const [alternateNames, setAlternateNames] = useState<string[]>([""]);
   const [description, setDescription] = useState("");
@@ -32,7 +36,7 @@ export default function Add() {
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
 
@@ -43,11 +47,86 @@ export default function Add() {
       const isProxy = already.pathname.includes("/api/proxy-model");
       if (isProxy) {
         const original = already.searchParams.get("url");
-        return `/api/proxy-model?url=${encodeURIComponent(original || modelUrl)}`;
+        return `/api/proxy-model?url=${encodeURIComponent(
+          original || modelUrl
+        )}`;
       }
     } catch {}
     return `/api/proxy-model?url=${encodeURIComponent(modelUrl)}`;
   }, [modelUrl]);
+
+  // Fetch existing food data
+  useEffect(() => {
+    if (!id) {
+      setError("ID tidak ditemukan");
+      setFetchLoading(false);
+      return;
+    }
+
+    const fetchFood = async () => {
+      try {
+        const res = await fetch(`/api/foods/${id}`);
+        if (!res.ok) throw new Error("Food tidak ditemukan");
+
+        const data = await res.json();
+
+        // Populate form with existing data
+        setName(data.name || "");
+        setAlternateNames(
+          data.alternate_names && data.alternate_names.length > 0
+            ? data.alternate_names
+            : [""]
+        );
+        setDescription(data.description || "");
+        setProvince(data.origin?.province || "");
+        setIsland(data.origin?.island || "");
+        setCityOrRegion(data.origin?.city_or_region || "");
+        setCategory(data.category || "");
+        setCourse(data.course || "");
+        setMainIngredients(
+          data.main_ingredients && data.main_ingredients.length > 0
+            ? data.main_ingredients
+            : [""]
+        );
+        setServingTemperature(data.serving?.temperature || "");
+        setServingAccompaniments(
+          data.serving?.accompaniments && data.serving.accompaniments.length > 0
+            ? data.serving.accompaniments
+            : [""]
+        );
+        setServingPortionSize(data.serving?.portion_size || "");
+        setTasteSpiciness(data.taste_profile?.spiciness || "");
+        setFlavorNotes(
+          data.taste_profile?.flavor_notes &&
+            data.taste_profile.flavor_notes.length > 0
+            ? data.taste_profile.flavor_notes
+            : [""]
+        );
+
+        // Set photo - check if it's a URL or base64
+        if (data.photo) {
+          if (data.photo.startsWith("http")) {
+            setPhotoUrl(data.photo);
+          } else if (data.photo.startsWith("data:")) {
+            setPhotoPreview(data.photo);
+          }
+        }
+
+        // Set existing 3D model if available
+        if (data.model3D) {
+          setModelUrl(data.model3D);
+        }
+
+        setFetchLoading(false);
+      } catch (err: any) {
+        setError(err.message || "Gagal memuat data");
+        setFetchLoading(false);
+        toast.error("Gagal memuat data food");
+      }
+    };
+
+    fetchFood();
+  }, [id]);
 
   const handlePhotoChange = (file: File | null, preview: string) => {
     setPhotoFile(file);
@@ -56,18 +135,27 @@ export default function Add() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!id) {
+      toast.error("ID tidak valid");
+      return;
+    }
+
     setLoading(true);
-    setSuccess(null);
     setError(null);
 
+    const loadingToast = toast.loading("Mengupdate food...");
+
     try {
-      // Prepare photo: if file selected -> base64, else use URL
+      // Prepare photo: if file selected -> base64, else use existing URL or preview
       let photoValue: string | null = null;
       if (photoFile) {
         photoValue = await fileToDataUrlResized(photoFile, 1024, 0.85);
       } else if (photoUrl.trim()) {
         photoValue = photoUrl.trim();
+      } else if (photoPreview) {
+        photoValue = photoPreview;
       }
+
       if (!photoValue)
         throw new Error("Minimal 1 foto harus diupload atau isi URL");
 
@@ -75,8 +163,8 @@ export default function Add() {
       if (!province || !island || !cityOrRegion)
         throw new Error("Province, Island, dan City/Region harus diisi");
 
-      const res = await fetch("/api/foods", {
-        method: "POST",
+      const res = await fetch(`/api/foods/${id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
@@ -96,54 +184,75 @@ export default function Add() {
             spiciness: tasteSpiciness,
             flavor_notes: flavorNotes.filter((s) => s.trim()),
           },
-          ...(modelUrl ? { ["model3D"]: modelUrl } : {}),
+          ...(modelUrl ? { model3D: modelUrl } : {}),
         }),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal menambah food");
-      setSuccess("Berhasil menambah food!");
-      setName("");
-      setAlternateNames([""]);
-      setDescription("");
-      setProvince("");
-      setIsland("");
-      setCityOrRegion("");
-      setCategory("");
-      setCourse("");
-      setMainIngredients([""]);
-      setServingTemperature("");
-      setServingAccompaniments([""]);
-      setServingPortionSize("");
-      setTasteSpiciness("");
-      setFlavorNotes([""]);
-      setPhotoFile(null);
-      setPhotoPreview("");
-      setPhotoUrl("");
-      setModelUrl(null);
-      // Redirect to dashboard after short delay to show success
+      if (!res.ok) throw new Error(data.error || "Gagal mengupdate food");
+
+      toast.dismiss(loadingToast);
+      toast.success("Berhasil mengupdate food! 🎉", {
+        duration: 3000,
+        position: "top-center",
+      });
+
+      // Redirect to dashboard after short delay
       setTimeout(() => {
         router.push("/admin");
-      }, 500);
+      }, 1000);
     } catch (err: any) {
-      setError(err.message || "Gagal menambah food");
+      toast.dismiss(loadingToast);
+      toast.error(err.message || "Gagal mengupdate food", {
+        duration: 4000,
+        position: "top-center",
+      });
+      setError(err.message || "Gagal mengupdate food");
     } finally {
       setLoading(false);
     }
   };
+
+  if (fetchLoading) {
+    return (
+      <div className="w-full min-h-[calc(100vh-4rem)] flex justify-center items-center bg-[#F9F5EB]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C4033]"></div>
+          <p className="mt-4 text-[#5C4033] font-semibold">Loading data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !id) {
+    return (
+      <div className="w-full min-h-[calc(100vh-4rem)] flex justify-center items-center bg-[#F9F5EB]">
+        <div className="bg-white rounded-xl border border-red-200 p-6 max-w-md">
+          <h2 className="text-xl font-bold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-700">{error}</p>
+          <button
+            onClick={() => router.push("/admin")}
+            className="mt-4 px-4 py-2 bg-[#5C4033] text-white rounded-lg hover:bg-[#4a362b]"
+          >
+            Kembali ke Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] flex justify-center items-start bg-[#F9F5EB] mb-5">
       <section className="w-full max-w-3xl bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div>
           <h2 className="text-2xl font-bold text-[#5C4033] mb-1">
-            Add New Food
+            Update Food
           </h2>
           <p className="text-sm text-[#8B6F47] mb-4">
-            Lengkapi detail makanan, gambar, dan (opsional) model 3D.
+            Edit detail makanan, gambar, dan model 3D.
           </p>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-            {/* Name */}
             <FormInput
               label="Name"
               value={name}
@@ -152,7 +261,6 @@ export default function Add() {
               required
             />
 
-            {/* Alternate Names (Array) */}
             <ArrayInputField
               label="Alternate Names"
               values={alternateNames}
@@ -160,7 +268,6 @@ export default function Add() {
               placeholder="e.g. Mie Aceh Goreng"
             />
 
-            {/* Description */}
             <FormInput
               label="Description"
               value={description}
@@ -170,7 +277,6 @@ export default function Add() {
               type="textarea"
             />
 
-            {/* Origin Fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormInput
                 label="Province"
@@ -197,7 +303,6 @@ export default function Add() {
               </div>
             </div>
 
-            {/* Photo Upload */}
             <PhotoUpload
               photoFile={photoFile}
               photoPreview={photoPreview}
@@ -206,14 +311,62 @@ export default function Add() {
               onUrlChange={setPhotoUrl}
             />
 
-            {/* Generate 3D */}
-            <Generate3D
-              photoFile={photoFile}
-              photoUrl={photoUrl}
-              onModelUrlChange={setModelUrl}
-            />
+            {isValid3DModelUrl(modelUrl) && proxiedModelUrl && (
+              <div className="bg-[#FAFAFA] border border-gray-200 p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-semibold text-[#5C4033]">
+                    🪩 Model 3D Saat Ini
+                  </h3>
+                  <span className="text-xs text-green-600 font-semibold">
+                    ✓ Ada Model
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mb-2 break-all">
+                  URL: {modelUrl}
+                </p>
+                <Suspense
+                  fallback={
+                    <div className="text-center text-gray-400 p-8">
+                      Memuat model 3D...
+                    </div>
+                  }
+                >
+                  <ModelViewer url={proxiedModelUrl} />
+                </Suspense>
+                <div className="mt-3 text-center">
+                  <a
+                    href={`/api/proxy-model?url=${encodeURIComponent(
+                      modelUrl!.includes("/api/proxy-model?url=")
+                        ? decodeURIComponent(modelUrl!.split("url=")[1])
+                        : modelUrl!
+                    )}`}
+                    download="model.glb"
+                    className="inline-block px-4 py-2 rounded-lg bg-[#5C4033] text-white hover:bg-[#4a362b] text-sm"
+                  >
+                    Download Model
+                  </a>
+                </div>
+              </div>
+            )}
 
-            {/* Category & Course */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-[#5C4033]">
+                  Model 3D
+                </label>
+                {isValid3DModelUrl(modelUrl) && (
+                  <span className="text-xs text-gray-500">
+                    (Generate ulang jika ingin mengganti)
+                  </span>
+                )}
+              </div>
+              <Generate3D
+                photoFile={photoFile}
+                photoUrl={photoUrl || photoPreview}
+                onModelUrlChange={setModelUrl}
+              />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormInput
                 label="Category"
@@ -229,7 +382,6 @@ export default function Add() {
               />
             </div>
 
-            {/* Main Ingredients (Array) */}
             <ArrayInputField
               label="Main Ingredients"
               values={mainIngredients}
@@ -237,7 +389,6 @@ export default function Add() {
               placeholder="e.g. Mie tebal"
             />
 
-            {/* Serving */}
             <div>
               <label className="block text-sm font-semibold text-[#5C4033] mb-2">
                 Serving
@@ -313,7 +464,6 @@ export default function Add() {
               </div>
             </div>
 
-            {/* Taste Profile */}
             <div>
               <label className="block text-sm font-semibold text-[#5C4033] mb-2">
                 Taste Profile
@@ -354,7 +504,9 @@ export default function Add() {
                         type="button"
                         className="px-3 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 text-sm"
                         onClick={() =>
-                          setFlavorNotes((arr) => arr.filter((_, i) => i !== idx))
+                          setFlavorNotes((arr) =>
+                            arr.filter((_, i) => i !== idx)
+                          )
                         }
                         disabled={flavorNotes.length === 1}
                       >
@@ -373,65 +525,49 @@ export default function Add() {
               </div>
             </div>
 
-            {/* Success/Error */}
-            {success && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm">
-                {success}
-              </div>
-            )}
             {error && (
               <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">
                 {error}
               </div>
             )}
 
-            {/* 3D Preview when model URL is ready */}
-            {isValid3DModelUrl(modelUrl) && proxiedModelUrl && (
-              <div className="bg-[#FAFAFA] border border-gray-200 p-4 rounded-lg w-full mt-4">
-                <h3 className="text-lg font-semibold mb-2 text-center text-[#5C4033]">
-                  🪩 Preview Model 3D
-                </h3>
-                <p className="text-xs text-gray-500 mb-2 break-all">
-                  URL: {modelUrl}
-                </p>
-                <Suspense
-                  fallback={
-                    <div className="text-center text-gray-400 p-8">
-                      Memuat model 3D...
-                    </div>
-                  }
-                >
-                  <ModelViewer url={proxiedModelUrl} />
-                </Suspense>
-                <div className="mt-3 text-center">
-                  <a
-                    href={`/api/proxy-model?url=${encodeURIComponent(
-                      modelUrl!.includes("/api/proxy-model?url=")
-                        ? decodeURIComponent(modelUrl!.split("url=")[1])
-                        : modelUrl!
-                    )}`}
-                    download="model.glb"
-                    className="inline-block px-4 py-2 rounded-lg bg-[#5C4033] text-white hover:bg-[#4a362b] text-sm"
-                  >
-                    Download Model
-                  </a>
-                </div>
-              </div>
-            )}
-
-            {/* Submit */}
-            <div className="pt-2">
+            <div className="pt-2 flex gap-3">
               <button
-                type="submit"
-                className="w-full px-4 py-3 rounded-xl bg-[#5C4033] text-white font-semibold hover:bg-[#4a362b] transition-colors"
+                type="button"
+                onClick={() => router.push("/admin")}
+                className="flex-1 px-4 py-3 rounded-xl bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors"
                 disabled={loading}
               >
-                {loading ? "Loading..." : "🚀 Submit"}
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-3 rounded-xl bg-[#5C4033] text-white font-semibold hover:bg-[#4a362b] transition-colors disabled:bg-gray-400"
+                disabled={loading}
+              >
+                {loading ? "Updating..." : "💾 Update"}
               </button>
             </div>
           </form>
         </div>
       </section>
     </div>
+  );
+}
+
+export default function Update() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full min-h-[calc(100vh-4rem)] flex justify-center items-center bg-[#F9F5EB]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#5C4033]"></div>
+            <p className="mt-4 text-[#5C4033] font-semibold">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <UpdateForm />
+    </Suspense>
   );
 }
