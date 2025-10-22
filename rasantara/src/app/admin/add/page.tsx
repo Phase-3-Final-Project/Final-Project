@@ -44,7 +44,9 @@ export default function Add() {
       const isProxy = already.pathname.includes("/api/proxy-model");
       if (isProxy) {
         const original = already.searchParams.get("url");
-        return `/api/proxy-model?url=${encodeURIComponent(original || modelUrl)}`;
+        return `/api/proxy-model?url=${encodeURIComponent(
+          original || modelUrl
+        )}`;
       }
     } catch {}
     return `/api/proxy-model?url=${encodeURIComponent(modelUrl)}`;
@@ -64,7 +66,7 @@ export default function Add() {
     try {
       // Prepare photo: prioritize upgraded image, then file, then URL
       let photoValue: string | null = null;
-      
+
       // Use upgraded image if available
       if (upgradedImageUrl.trim()) {
         photoValue = upgradedImageUrl.trim();
@@ -73,7 +75,7 @@ export default function Add() {
       } else if (photoUrl.trim()) {
         photoValue = photoUrl.trim();
       }
-      
+
       if (!photoValue)
         throw new Error("Minimal 1 foto harus diupload atau isi URL");
 
@@ -224,18 +226,47 @@ export default function Add() {
 
             {/* Category & Course */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormInput
-                label="Category"
+              <select
                 value={category}
-                onChange={setCategory}
-                placeholder="e.g. Hidangan Utama"
-              />
-              <FormInput
-                label="Course"
-                value={course}
-                onChange={setCourse}
-                placeholder="e.g. Makan Siang / Malam"
-              />
+                onChange={(e) => setCategory(e.target.value)}
+                className="px-3 py-3 rounded-lg bg-gray-100 text-gray-700 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-500 hover:border-gray-400 transition-colors"
+              >
+                <option className="text-gray-700" value="">All Categories</option>
+                <option value="Hidangan Utama">Main Dish</option>
+                <option value="Kue Tradisional">Traditional Cake</option>
+                <option value="Sup">Soup</option>
+                <option value="Lauk">Side Dish</option>
+                <option value="Camilan">Snack</option>
+                <option value="Seafood">Seafood</option>
+                <option value="Gulai">Curry</option>
+                <option value="Roti">Bread</option>
+                <option value="Pendamping">Accompaniment</option>
+                <option value="Bumbu">Spice</option>
+                <option value="Sambal">Chili Sauce</option>
+              </select>
+            <select
+              value={course}
+              onChange={(e) => setCourse(e.target.value)}
+              className="px-3 py-3 rounded-lg bg-gray-100 text-gray-700 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-500 hover:border-gray-400 transition-colors"
+            >
+              <option className="text-gray-700" value="">All Courses</option>
+              <option value="Sarapan">Breakfast</option>
+              <option value="Makan Siang">Lunch</option>
+              <option value="Makan Malam">Dinner</option>
+              <option value="Camilan">Snack</option>
+              <option value="Hidangan Penutup">Dessert</option>
+              <option value="Jajanan">Street Food</option>
+              <option value="Jamuan">Banquet</option>
+              <option value="Acara Adat">Traditional Event</option>
+              <option value="Pesta">Party</option>
+              <option value="Perayaan">Celebration</option>
+              <option value="Kenduri">Feast</option>
+              <option value="Bekal">Packed Meal</option>
+              <option value="Pendamping">Accompaniment</option>
+              <option value="Oleh-oleh">Souvenir</option>
+              <option value="Hari Raya">Holiday</option>
+              <option value="Acara Khusus">Special Event</option>
+            </select>
             </div>
 
             {/* Main Ingredients (Array) */}
@@ -363,7 +394,9 @@ export default function Add() {
                         type="button"
                         className="px-3 py-2 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 text-sm"
                         onClick={() =>
-                          setFlavorNotes((arr) => arr.filter((_, i) => i !== idx))
+                          setFlavorNotes((arr) =>
+                            arr.filter((_, i) => i !== idx)
+                          )
                         }
                         disabled={flavorNotes.length === 1}
                       >
@@ -400,9 +433,6 @@ export default function Add() {
                 <h3 className="text-lg font-semibold mb-2 text-center text-[#5C4033]">
                   🪩 Preview Model 3D
                 </h3>
-                <p className="text-xs text-gray-500 mb-2 break-all">
-                  URL: {modelUrl}
-                </p>
                 <Suspense
                   fallback={
                     <div className="text-center text-gray-400 p-8">
