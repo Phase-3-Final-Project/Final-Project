@@ -361,26 +361,33 @@ export default function FoodDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Image Section */}
           <div className="space-y-4">
-            <div className="relative h-96 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg overflow-hidden">
-              <Image
-                src={imageSrc || "/placeholder.svg"}
-                alt={food?.name ?? ""}
-                fill
-                className="object-cover"
-                // bypass Next optimization for problematic remote hosts during dev
-                unoptimized
-                onError={() => {
-                  // when loading fails, fall back to a local image to avoid retry loops
-                  setImageSrc("/indonesian-food.jpg")
-                }}
-              />
+            <div className="sticky top-28 space-y-4">
+              {/* Photo Container with minimalist background */}
+              <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-8 shadow-lg">
+                <div className="relative h-80 overflow-hidden rounded-2xl">
+                  <Image
+                    src={imageSrc || "/placeholder.svg"}
+                    alt={food?.name ?? ""}
+                    fill
+                    className="object-contain rounded-2xl"
+                    // bypass Next optimization for problematic remote hosts during dev
+                    unoptimized
+                    onError={() => {
+                      // when loading fails, fall back to a local image to avoid retry loops
+                      setImageSrc("/indonesian-food.jpg")
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* Sticky Wishlist Button */}
+              <Button
+                onClick={handleWishlistToggle}
+                className={`w-full ${isWishlisted ? "bg-red-500 hover:bg-red-600" : "bg-amber-600 hover:bg-amber-700"} text-white shadow-lg hover:shadow-xl transition-all`}
+              >
+                {isWishlisted ? "❤️ Remove from Wishlist" : "🤍 Add to Wishlist"}
+              </Button>
             </div>
-            <Button
-              onClick={handleWishlistToggle}
-              className={`w-full ${isWishlisted ? "bg-red-500 hover:bg-red-600" : "bg-amber-600 hover:bg-amber-700"} text-white`}
-            >
-              {isWishlisted ? "❤️ Remove from Wishlist" : "🤍 Add to Wishlist"}
-            </Button>
           </div>
 
           {/* Info Section */}
@@ -497,7 +504,7 @@ export default function FoodDetailPage() {
                 <Card
                   key={rec._id}
                   onClick={() => router.push(`/food/${rec._id}`)}
-                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-white border-amber-200"
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-white border-amber-200 p-0"
                 >
                   <div className="relative h-40 bg-gradient-to-br from-amber-100 to-orange-100">
                     <Image
