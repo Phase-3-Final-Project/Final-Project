@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { FaEdit } from "react-icons/fa";
+import { MdOutlineDashboard } from "react-icons/md";
+import { IoAddCircleOutline } from "react-icons/io5";
 
 export default function Sidebar() {
   return (
@@ -20,19 +23,7 @@ export default function Sidebar() {
               href="/admin/"
               className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-[#F9F5EB] transition-all duration-200 group"
             >
-              <svg
-                className="w-6 h-6 text-[#8B6F47] group-hover:text-[#5C4033] transition-colors"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
+              <MdOutlineDashboard className="w-6 h-6 text-[#8B6F47] group-hover:text-[#5C4033] transition-colors" />
               <span className="font-bold text-sm">Dashboard</span>
             </Link>
           </li>
@@ -43,19 +34,7 @@ export default function Sidebar() {
               href="/admin/add"
               className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-[#F9F5EB] transition-all duration-200 group"
             >
-              <svg
-                className="w-6 h-6 text-[#8B6F47] group-hover:text-[#5C4033] transition-colors"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
+              <IoAddCircleOutline className="w-6 h-6 text-[#8B6F47] group-hover:text-[#5C4033] transition-colors" />
               <span className="font-bold text-sm">Add Product</span>
             </Link>
           </li>
@@ -66,19 +45,7 @@ export default function Sidebar() {
               href="/admin/update"
               className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-[#F9F5EB] transition-all duration-200 group"
             >
-              <svg
-                className="w-6 h-6 text-[#8B6F47] group-hover:text-[#5C4033] transition-colors"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+              <FaEdit className="w-6 h-6 text-[#8B6F47] group-hover:text-[#5C4033] transition-colors" />
               <span className="font-bold text-sm">Update</span>
             </Link>
           </li>

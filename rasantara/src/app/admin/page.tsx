@@ -42,32 +42,31 @@ export default async function Dashboard({
   const currentPage = Number(params.page) || 1;
 
   return (
-    <div className="min-h-screen bg-[#F9F5EB]">
-      <main className="ml-64 px-8 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-black mb-1">Dashboard</h1>
-          <p className="text-sm text-gray-600">Kelola data makanan tradisional Indonesia</p>
-        </div>
-        
-        {/* Table Card */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Table Header Info */}
-          <div className="px-5 py-3 bg-[#7C3E2A]">
-            <h2 className="text-lg font-semibold text-white">Data Makanan</h2>
-            <p className="text-xs text-gray-200 mt-0.5">
-              Total {foodsData.length} makanan terdaftar
-            </p>
-          </div>
+    // Let AdminLayout handle sidebar offset and global padding; we only center content width here
+    <div className="max-w-6xl mx-auto mb-5">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-black mb-1">Dashboard</h1>
+        <p className="text-sm text-gray-600">Kelola data makanan tradisional Indonesia</p>
+      </div>
 
-          {/* Table with 3D Modal */}
-          <DashboardTable 
-            foods={foodsData} 
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-          />
+      {/* Table Card */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        {/* Table Header Info */}
+        <div className="px-5 py-3 bg-[#7C3E2A]">
+          <h2 className="text-lg font-semibold text-white">Data Makanan</h2>
+          <p className="text-xs text-gray-200 mt-0.5">
+            Total {foodsData.length} makanan terdaftar
+          </p>
         </div>
-      </main>
+
+        {/* Table with 3D Modal */}
+        <DashboardTable
+          foods={foodsData}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+        />
+      </div>
     </div>
   );
 }

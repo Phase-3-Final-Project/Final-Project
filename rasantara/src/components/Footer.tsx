@@ -4,7 +4,8 @@ import { IoIosPeople } from "react-icons/io";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#FAFAFA] py-6 px-4 sm:py-8 mt-auto">
+    // Ensure footer sits above the fixed admin sidebar using stacking order
+    <footer className="relative z-40 bg-[#FAFAFA] py-6 px-4 sm:py-8 mt-auto">
       <div className="max-w-7xl mx-auto">
         {/* Main Footer Content */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6 sm:gap-8 mb-6">
