@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSession, signOut } from "next-auth/react";
-import { IoHome } from "react-icons/io5";
+import { LuHouse } from "react-icons/lu";
 import { GiSelfLove } from "react-icons/gi";
 import { IoLogIn } from "react-icons/io5";
 import { IoLogOut } from "react-icons/io5";
@@ -109,7 +109,7 @@ export default function Navbar() {
           href="/"
           className="flex flex-col items-center text-[#5C4033] hover:text-black"
         >
-          <IoHome />
+          <LuHouse />
           <p>Home</p>
         </Link>
         <Link
