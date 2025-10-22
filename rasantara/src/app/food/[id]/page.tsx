@@ -5,8 +5,11 @@ import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
+import { GiChickenOven } from "react-icons/gi";
+import { ImLocation2 } from "react-icons/im";
+import { GiIsland } from "react-icons/gi";
+import { FaUtensils } from "react-icons/fa";
 import AIRecommendations from "@/components/AiRecommendation"
-// data now comes from the database
 
 export default function FoodDetailPage() {
   const params = useParams()
@@ -18,7 +21,9 @@ export default function FoodDetailPage() {
     description?: string
     photo?: string
     model3D?: string
-    origin?: { province?: string; island?: string }
+    origin?: { province?: string; island?: string; city_or_region?: string }
+    category?: string
+    course?: string
   }
 
   type User = { id?: string; role?: string }
@@ -41,7 +46,7 @@ export default function FoodDetailPage() {
           setFood(f)
             // initialize image src (use remote photo if present)
             setImageSrc(f?.photo || "/placeholder.svg")
-          // set recommendations from related by island if returned
+          // set recommendations from related to island if returned
           if (f?.origin?.island) {
             const relatedRes = await fetch(`/api/foods?island=${encodeURIComponent(f.origin.island)}`)
             if (relatedRes.ok) {
@@ -145,8 +150,6 @@ export default function FoodDetailPage() {
           console.error('Failed to remove from wishlist:', error);
         }
       } else {
-        // Add to wishlist
-        console.log('Adding to wishlist, food._id:', food?._id, 'type:', typeof food?._id);
         const res = await fetch('/api/wishlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -234,10 +237,28 @@ export default function FoodDetailPage() {
           {/* Info Section */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-4xl font-bold text-amber-900 mb-2">{food?.name}</h1>
-              <div className="flex gap-3 text-sm">
-                  <span className="bg-amber-100 text-amber-900 px-3 py-1 rounded-full">📍 {food?.origin?.province}</span>
-                  <span className="bg-orange-100 text-orange-900 px-3 py-1 rounded-full">🏝️ {food?.origin?.island}</span>
+              <h1 className="text-4xl font-bold text-amber-900 mb-4">{food?.name}</h1>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 px-3 py-1.5 rounded-full text-sm font-medium">
+                  <ImLocation2 />
+                  {[food?.origin?.city_or_region, food?.origin?.province].filter(Boolean).join(', ')}
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-orange-100 text-orange-900 px-3 py-1.5 rounded-full text-sm font-medium">
+                  <GiIsland />
+                  {food?.origin?.island}
+                </span>
+                {food?.category && (
+                  <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-900 px-3 py-1.5 rounded-full text-sm font-medium">
+                    <FaUtensils />
+                    {food.category}
+                  </span>
+                )}
+                {food?.course && (
+                  <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-900 px-3 py-1.5 rounded-full text-sm font-medium">
+                    <GiChickenOven className="w-4 h-4" />
+                    {food.course}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -248,13 +269,13 @@ export default function FoodDetailPage() {
 
             <Card className="p-6 bg-white border-amber-200">
               <h2 className="font-bold text-amber-900 mb-3">3D Model</h2>
-              <p className="text-sm text-amber-700">3D model viewer would be displayed here: {food?.model3D}</p>
+              <p className="text-sm text-amber-700">3D model viewer would be displayed here: {food?.name}</p>
               <div className="mt-4 h-48 bg-gradient-to-br from-amber-100 to-orange-100 rounded flex items-center justify-center">
                 <span className="text-4xl">📦</span>
               </div>
             </Card>
 
-            {user && <AIRecommendations foodName={food?.name ?? ''} userHistory={[]} userWishlist={userWishlist} />}
+            {/* {user && <AIRecommendations foodName={food?.name ?? ''} userHistory={[]} userWishlist={userWishlist} />} */}
           </div>
         </div>
 
