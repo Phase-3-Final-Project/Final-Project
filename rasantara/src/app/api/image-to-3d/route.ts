@@ -15,7 +15,6 @@ export async function POST(req: Request) {
       const imageUrl = form.get('image_url');
       if (file && file instanceof Blob) {
         const arrayBuffer = await file.arrayBuffer();
-        // @ts-ignore - Buffer is available in Node runtime
         const base64 = Buffer.from(arrayBuffer).toString('base64');
         const type = (file as File).type || 'image/jpeg';
         const mime = type || 'image/jpeg';
@@ -57,7 +56,7 @@ export async function POST(req: Request) {
     });
 
     const text = await response.text();
-    let data: any;
+    let data: { raw?: string; result?: string; task_id?: string; id?: string } | Record<string, unknown>;
     try {
       data = JSON.parse(text);
     } catch {
@@ -69,8 +68,9 @@ export async function POST(req: Request) {
       console.log('[Meshy] Start OK:', response.status, 'task_id:', data?.result || data?.task_id || data?.id);
     }
     return NextResponse.json(data, { status: response.status });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Meshy API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to start 3D generation';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

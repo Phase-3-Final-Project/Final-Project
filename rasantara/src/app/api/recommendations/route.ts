@@ -18,10 +18,10 @@ export async function POST(request: Request) {
 
     const prompt = `You are an Indonesian food expert. Based on viewing history (${historyText}) and wishlist (${wishlistText}), recommend 2-3 Indonesian foods similar to ${foodName}. Return a JSON array of objects {name, reason}.`;
 
-    const model = "gemini-2.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta2/models/${encodeURIComponent(
+    const model = "gemini-1.5-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
       model
-    )}:generateText?key=${encodeURIComponent(apiKey)}`;
+    )}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
     const resp = await fetch(url, {
       method: "POST",
@@ -29,9 +29,15 @@ export async function POST(request: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        prompt: { text: prompt },
-        temperature: 0.2,
-        maxOutputTokens: 300,
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 300,
+        }
       }),
     });
 
@@ -45,17 +51,7 @@ export async function POST(request: Request) {
 
     let text: string | undefined;
     if (j) {
-      text =
-        j?.candidates?.[0]?.output ??
-        j?.candidates?.[0]?.content?.[0]?.text ??
-        j?.output?.[0]?.content?.map((c: unknown) => {
-          if (typeof c === "object" && c !== null && "text" in c) {
-            return (c as { text?: string }).text ?? "";
-          }
-          return "";
-        }).join("") ??
-        j?.candidates?.[0]?.output_text ??
-        j?.text ?? undefined;
+      text = j?.candidates?.[0]?.content?.parts?.[0]?.text ?? undefined;
     }
 
     if (!text) {

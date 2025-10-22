@@ -13,7 +13,8 @@ export async function GET(req: Request) {
     });
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Failed to fetch result" }, { status: 500 });
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Failed to fetch result';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

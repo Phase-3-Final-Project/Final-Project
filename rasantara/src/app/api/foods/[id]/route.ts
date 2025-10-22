@@ -86,12 +86,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (body["model3D"]) payload["model3D"] = body["model3D"];
     
     // Update the food item
-    const result = await FoodModel.updateById(id, payload as any);
+    const result = await FoodModel.updateById(id, payload);
     
     return NextResponse.json(result, { status: 200 });
-  } catch (err: any) {
+  } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: err.message || 'Failed to update food' }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : 'Failed to update food';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -108,8 +109,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const result = await FoodModel.deleteById(id);
     
     return NextResponse.json(result, { status: 200 });
-  } catch (err: any) {
+  } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: err.message || 'Failed to delete food' }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : 'Failed to delete food';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
