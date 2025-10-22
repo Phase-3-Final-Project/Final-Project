@@ -433,9 +433,6 @@ export default function Add() {
                 <h3 className="text-lg font-semibold mb-2 text-center text-[#5C4033]">
                   🪩 Preview Model 3D
                 </h3>
-                <p className="text-xs text-gray-500 mb-2 break-all">
-                  URL: {modelUrl}
-                </p>
                 <Suspense
                   fallback={
                     <div className="text-center text-gray-400 p-8">
