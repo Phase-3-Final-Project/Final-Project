@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/Button"
@@ -10,6 +10,11 @@ import { ImLocation2 } from "react-icons/im";
 import { GiIsland } from "react-icons/gi";
 import { FaUtensils } from "react-icons/fa";
 import AIRecommendations from "@/components/AiRecommendation"
+import View3DModal from "@/components/View3DModal"
+import { isValid3DModelUrl } from "@/helpers/validate3DModel"
+import * as THREE from "three"
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 
 export default function FoodDetailPage() {
   const params = useParams()
@@ -35,6 +40,11 @@ export default function FoodDetailPage() {
   const [currentWishlistId, setCurrentWishlistId] = useState<string | null>(null)
   const [recommendations, setRecommendations] = useState<Array<Pick<Food, '_id' | 'name' | 'photo' | 'origin'>>>([])
   const [userWishlist, setUserWishlist] = useState<{ id?: string; name?: string }[]>([])
+  const [modalOpen, setModalOpen] = useState(false)
+  const [showNoModelNotification, setShowNoModelNotification] = useState(false)
+  const [modelLoading, setModelLoading] = useState(false)
+  const [modelError, setModelError] = useState(false)
+  const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     ;(async () => {
@@ -127,6 +137,139 @@ export default function FoodDetailPage() {
     })()
   }, [foodId, params.id])
 
+  // Load 3D model preview in card
+  useEffect(() => {
+    if (!mountRef.current || !food?.model3D || !isValid3DModelUrl(food.model3D)) return
+
+    setModelLoading(true)
+    setModelError(false)
+
+    // Scene setup
+    const scene = new THREE.Scene()
+    scene.background = null
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(
+      50,
+      mountRef.current.clientWidth / mountRef.current.clientHeight,
+      0.1,
+      1000
+    )
+    camera.position.z = 3
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: true 
+    })
+    renderer.setSize(
+      mountRef.current.clientWidth,
+      mountRef.current.clientHeight
+    )
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    mountRef.current.appendChild(renderer.domElement)
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8)
+    scene.add(ambientLight)
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    directionalLight.position.set(3, 3, 3)
+    scene.add(directionalLight)
+
+    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4)
+    directionalLight2.position.set(-3, -3, -3)
+    scene.add(directionalLight2)
+
+    // Controls - disabled for card preview (only auto-rotate)
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.05
+    controls.enableZoom = false
+    controls.enableRotate = false
+    controls.enablePan = false
+    controls.autoRotate = true
+    controls.autoRotateSpeed = 1.5
+
+    // Load model
+    const loader = new GLTFLoader()
+    const proxyUrl = `/api/proxy-model?url=${encodeURIComponent(food.model3D)}`
+    
+    loader.load(
+      proxyUrl,
+      (gltf) => {
+        const model = gltf.scene
+
+        // Center and scale model
+        const box = new THREE.Box3().setFromObject(model)
+        const center = box.getCenter(new THREE.Vector3())
+        const size = box.getSize(new THREE.Vector3())
+
+        const maxDim = Math.max(size.x, size.y, size.z)
+        const scale = 2.5 / maxDim
+        model.scale.multiplyScalar(scale)
+
+        model.position.sub(center.multiplyScalar(scale))
+
+        scene.add(model)
+        setModelLoading(false)
+      },
+      undefined,
+      (error) => {
+        console.error("Error loading 3D model preview:", error)
+        setModelError(true)
+        setModelLoading(false)
+      }
+    )
+
+    // Animation loop
+    let animationId: number
+    const animate = () => {
+      animationId = requestAnimationFrame(animate)
+      controls.update()
+      renderer.render(scene, camera)
+    }
+    animate()
+
+    // Handle resize
+    const handleResize = () => {
+      if (!mountRef.current) return
+      const width = mountRef.current.clientWidth
+      const height = mountRef.current.clientHeight
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+      renderer.setSize(width, height)
+    }
+    window.addEventListener("resize", handleResize)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("resize", handleResize)
+      cancelAnimationFrame(animationId)
+      
+      if (mountRef.current && renderer.domElement && mountRef.current.contains(renderer.domElement)) {
+        try {
+          mountRef.current.removeChild(renderer.domElement)
+        } catch (e) {
+          console.warn("Renderer already removed")
+        }
+      }
+      
+      renderer.dispose()
+      controls.dispose()
+      
+      scene.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose()
+          if (object.material instanceof THREE.Material) {
+            object.material.dispose()
+          }
+        }
+      })
+      scene.clear()
+    }
+  }, [food])
+
   const handleWishlistToggle = async () => {
     if (!user) {
       router.push("/auth/login")
@@ -188,9 +331,20 @@ export default function FoodDetailPage() {
     }
   }
 
+  const handleView3D = () => {
+    if (!food?.model3D || !isValid3DModelUrl(food.model3D)) {
+      setShowNoModelNotification(true)
+      setTimeout(() => setShowNoModelNotification(false), 3000)
+      return
+    }
+    setModalOpen(true)
+  }
+
   if (!food) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
+
+  const hasValid3DModel = isValid3DModelUrl(food?.model3D)
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
@@ -267,11 +421,71 @@ export default function FoodDetailPage() {
               <p className="text-amber-800 leading-relaxed">{food?.description}</p>
             </Card>
 
-            <Card className="p-6 bg-white border-amber-200">
-              <h2 className="font-bold text-amber-900 mb-3">3D Model</h2>
-              <p className="text-sm text-amber-700">3D model viewer would be displayed here: {food?.name}</p>
-              <div className="mt-4 h-48 bg-gradient-to-br from-amber-100 to-orange-100 rounded flex items-center justify-center">
-                <span className="text-4xl">📦</span>
+            <Card 
+              className={`p-6 bg-white border-amber-200 ${hasValid3DModel ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+              onClick={hasValid3DModel ? handleView3D : undefined}
+            >
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="font-bold text-amber-900">3D Model</h2>
+                {hasValid3DModel ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                    ✓ Available
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium">
+                    ✗ Not Available
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-amber-700 mb-3">
+                {hasValid3DModel 
+                  ? "Click to view 3D model in full screen" 
+                  : "3D model not available for this food"}
+              </p>
+              <div className="relative mt-4 h-64 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg overflow-hidden">
+                {hasValid3DModel ? (
+                  <>
+                    {/* 3D Model Container - pointer-events-none to prevent interaction */}
+                    <div ref={mountRef} className="w-full h-full pointer-events-none" />
+                    
+                    {/* Loading Overlay */}
+                    {modelLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-amber-700 mx-auto mb-3"></div>
+                          <p className="text-sm text-amber-800 font-medium">Loading 3D Model...</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Error State */}
+                    {modelError && !modelLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100">
+                        <div className="text-center px-4">
+                          <span className="text-4xl mb-2 block">⚠️</span>
+                          <p className="text-sm text-amber-800 font-medium">Failed to load 3D model</p>
+                          <p className="text-xs text-amber-600 mt-1">Click to try fullscreen view</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Click Hint Overlay - Only show when model is loaded */}
+                    {!modelLoading && !modelError && (
+                      <div className="absolute inset-0 bg-transparent hover:bg-black/5 transition-colors flex items-center justify-center group">
+                        <div className="absolute bottom-3 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm group-hover:bg-black/90 transition-all group-hover:scale-105">
+                          🖱️ Click for fullscreen view
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <div className="text-center">
+                      <span className="text-6xl mb-3 block opacity-40">📦</span>
+                      <p className="text-sm text-amber-700 font-medium">Didn't have 3D model yet</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -311,6 +525,42 @@ export default function FoodDetailPage() {
           </div>
         )}
       </div>
+
+      {/* 3D Modal */}
+      {food && hasValid3DModel && (
+        <View3DModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          modelUrl={food.model3D || ""}
+          foodName={food.name || ""}
+        />
+      )}
+
+      {/* No Model Notification */}
+      {showNoModelNotification && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in">
+          <div className="bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <div>
+              <p className="font-semibold">3D Model Not Available</p>
+              <p className="text-sm">This food doesn't have a 3D model yet.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
