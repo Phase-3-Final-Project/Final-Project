@@ -52,6 +52,47 @@ class FoodModel {
 
     return { success: true, message: "Data berhasil dihapus" };
   }
+
+  static async getById(id: string) {
+    const objectId = new ObjectId(id);
+    const food = await this.collection().findOne({ _id: objectId });
+    return food;
+  }
+
+  static async updateById(
+    id: string,
+    food: {
+      name?: string;
+      description?: string;
+      photo?: string;
+      origin?:
+        | { province: string; island: string; city_or_region: string }
+        | string[];
+      category?: string;
+      course?: string;
+      alternate_names?: string[];
+      main_ingredients?: string[];
+      serving?: {
+        temperature?: string;
+        accompaniments?: string[];
+        portion_size?: string;
+      };
+      taste_profile?: { spiciness?: string; flavor_notes?: string[] };
+      model3D?: string;
+    } & Record<string, unknown>
+  ) {
+    const objectId = new ObjectId(id);
+    const result = await this.collection().updateOne(
+      { _id: objectId },
+      { $set: food }
+    );
+
+    if (result.matchedCount === 0) {
+      throw new Error("Data tidak ditemukan");
+    }
+
+    return { success: true, message: "Data berhasil diupdate" };
+  }
 }
 
 export default FoodModel;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import View3DModal from "./View3DModal";
 import DeleteButton from "./DeleteButton";
+import { isValid3DModelUrl } from "@/helpers/validate3DModel";
 
 interface FoodData {
   _id: string;
@@ -58,8 +59,7 @@ export default function DashboardTable({
           </thead>
           <tbody>
             {currentData.map((food, index) => {
-              const hasValid3DModel =
-                food.model3D && food.model3D.startsWith("http");
+              const hasValid3DModel = isValid3DModelUrl(food.model3D);
               const originText =
                 typeof food.origin === "object"
                   ? food.origin.city_or_region || food.origin.province
@@ -110,11 +110,11 @@ export default function DashboardTable({
                   </td>
                   <td className="text-center py-3 px-4">
                     {hasValid3DModel ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-500 text-white text-sm font-semibold">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-500 text-white text-sm">
                         ✓ True
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500 text-white text-sm font-semibold">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500 text-white text-sm">
                         ✗ False
                       </span>
                     )}
@@ -149,7 +149,10 @@ export default function DashboardTable({
                           View 3D
                         </button>
                       )}
-                      <button className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded flex items-center gap-1 transition-colors">
+                      <a
+                        href={`/admin/update?id=${food._id}`}
+                        className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded flex items-center gap-1 transition-colors"
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-4 w-4"
@@ -165,7 +168,7 @@ export default function DashboardTable({
                           />
                         </svg>
                         Update
-                      </button>
+                      </a>
                       <DeleteButton foodId={food._id} foodName={food.name} />
                     </div>
                   </td>
