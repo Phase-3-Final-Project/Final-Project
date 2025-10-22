@@ -9,7 +9,6 @@ import { GiChickenOven } from "react-icons/gi";
 import { ImLocation2 } from "react-icons/im";
 import { GiIsland } from "react-icons/gi";
 import { FaUtensils } from "react-icons/fa";
-import AIRecommendations from "@/components/AiRecommendation"
 import View3DModal from "@/components/View3DModal"
 import { isValid3DModelUrl } from "@/helpers/validate3DModel"
 import * as THREE from "three"
@@ -39,7 +38,6 @@ export default function FoodDetailPage() {
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [currentWishlistId, setCurrentWishlistId] = useState<string | null>(null)
   const [recommendations, setRecommendations] = useState<Array<Pick<Food, '_id' | 'name' | 'photo' | 'origin'>>>([])
-  const [userWishlist, setUserWishlist] = useState<{ id?: string; name?: string }[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [showNoModelNotification, setShowNoModelNotification] = useState(false)
   const [modelLoading, setModelLoading] = useState(false)
@@ -87,8 +85,6 @@ export default function FoodDetailPage() {
             const body2 = await ures.json()
             type WishlistItem = { wishlistId?: string; food?: { id?: string; _id?: string; name?: string } }
             const wishlistItems = (body2.wishlist || []) as WishlistItem[]
-            const wishlistFoods = wishlistItems.map((w) => ({ id: w.food?.id || w.food?._id, name: w.food?.name }))
-            setUserWishlist(wishlistFoods)
             
             // Check if current food is in wishlist
             const currentFoodInWishlist = wishlistItems.find((w) => {
@@ -117,8 +113,6 @@ export default function FoodDetailPage() {
             const body = await ures.json()
             type WishlistItem = { wishlistId?: string; food?: { id?: string; _id?: string; name?: string } }
             const wishlistItems = (body.wishlist || []) as WishlistItem[]
-            const wishlistFoods = wishlistItems.map((w) => ({ id: w.food?.id || w.food?._id, name: w.food?.name }))
-            setUserWishlist(wishlistFoods)
             
             // Check if current food is in wishlist
             const currentFoodInWishlist = wishlistItems.find((w) => {
@@ -243,14 +237,15 @@ export default function FoodDetailPage() {
     window.addEventListener("resize", handleResize)
 
     // Cleanup
+    const mountElement = mountRef.current
     return () => {
       window.removeEventListener("resize", handleResize)
       cancelAnimationFrame(animationId)
       
-      if (mountRef.current && renderer.domElement && mountRef.current.contains(renderer.domElement)) {
+      if (mountElement && renderer.domElement && mountElement.contains(renderer.domElement)) {
         try {
-          mountRef.current.removeChild(renderer.domElement)
-        } catch (e) {
+          mountElement.removeChild(renderer.domElement)
+        } catch {
           console.warn("Renderer already removed")
         }
       }
@@ -482,7 +477,7 @@ export default function FoodDetailPage() {
                   <div className="flex flex-col items-center justify-center h-full">
                     <div className="text-center">
                       <span className="text-6xl mb-3 block opacity-40">📦</span>
-                      <p className="text-sm text-amber-700 font-medium">Didn't have 3D model yet</p>
+                      <p className="text-sm text-amber-700 font-medium">Did not have 3D model yet</p>
                     </div>
                   </div>
                 )}
@@ -556,7 +551,7 @@ export default function FoodDetailPage() {
             </svg>
             <div>
               <p className="font-semibold">3D Model Not Available</p>
-              <p className="text-sm">This food doesn't have a 3D model yet.</p>
+              <p className="text-sm">This food does not have a 3D model yet.</p>
             </div>
           </div>
         </div>

@@ -127,7 +127,7 @@ Transform this image following ALL requirements above, prioritizing the 3/4 side
 
 API Error: ${errorJson.error.message}`;
         }
-      } catch (e) {
+      } catch {
         // If not JSON, use original error
       }
       
@@ -166,10 +166,11 @@ API Error: ${errorJson.error.message}`;
       success: true,
       upgradedImageUrl,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Upgrade image error:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

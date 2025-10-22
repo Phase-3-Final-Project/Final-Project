@@ -20,7 +20,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, imageUrls });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to upload images';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

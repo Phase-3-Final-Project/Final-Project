@@ -397,10 +397,10 @@ export default function Home() {
 
       {/* Left Sidebar */}
       <div
-        className={`fixed top-24 left-0 h-[calc(100vh-6rem)] w-full md:w-[500px] bg-gradient-to-br from-amber-50 to-orange-50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+        className={`fixed left-0 w-full md:w-[500px] bg-gradient-to-br from-amber-50 to-orange-50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ height: 'calc(90vh - 6rem)' }}
+        style={{ top: '6rem', bottom: 0 }}
       >
         {/* Sidebar Header */}
         <div className="sticky top-0 bg-gradient-to-r from-amber-600 to-orange-600 p-6 shadow-md z-10">
@@ -601,10 +601,10 @@ export default function Home() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-24 right-0 h-[calc(100vh-6rem)] w-full md:w-[500px] bg-gradient-to-br from-amber-50 to-orange-50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+        className={`fixed right-0 w-full md:w-[500px] bg-gradient-to-br from-amber-50 to-orange-50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{ height: 'calc(90vh - 6rem)' }}
+        style={{ top: '6rem', bottom: 0 }}
       >
         {/* Drawer Header */}
         <div className="sticky top-0 bg-gradient-to-r from-amber-600 to-orange-600 p-6 shadow-md z-10">

@@ -29,9 +29,10 @@ export async function GET(req: NextRequest) {
         "Access-Control-Allow-Origin": "*",
       },
     });
-  } catch (e: any) {
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Proxy failed';
     return NextResponse.json(
-      { error: e?.message || "Proxy failed" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
