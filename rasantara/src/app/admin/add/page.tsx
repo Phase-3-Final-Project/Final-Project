@@ -31,6 +31,7 @@ export default function Add() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>("");
   const [photoUrl, setPhotoUrl] = useState<string>("");
+  const [upgradedImageUrl, setUpgradedImageUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,13 +62,18 @@ export default function Add() {
     setError(null);
 
     try {
-      // Prepare photo: if file selected -> base64, else use URL
+      // Prepare photo: prioritize upgraded image, then file, then URL
       let photoValue: string | null = null;
-      if (photoFile) {
+      
+      // Use upgraded image if available
+      if (upgradedImageUrl.trim()) {
+        photoValue = upgradedImageUrl.trim();
+      } else if (photoFile) {
         photoValue = await fileToDataUrlResized(photoFile, 1024, 0.85);
       } else if (photoUrl.trim()) {
         photoValue = photoUrl.trim();
       }
+      
       if (!photoValue)
         throw new Error("Minimal 1 foto harus diupload atau isi URL");
 
@@ -119,6 +125,7 @@ export default function Add() {
       setPhotoFile(null);
       setPhotoPreview("");
       setPhotoUrl("");
+      setUpgradedImageUrl("");
       setModelUrl(null);
       // Redirect to dashboard after short delay to show success
       setTimeout(() => {
@@ -204,12 +211,14 @@ export default function Add() {
               photoUrl={photoUrl}
               onFileChange={handlePhotoChange}
               onUrlChange={setPhotoUrl}
+              upgradedImageUrl={upgradedImageUrl}
+              onUpgradedImageChange={setUpgradedImageUrl}
             />
 
             {/* Generate 3D */}
             <Generate3D
               photoFile={photoFile}
-              photoUrl={photoUrl}
+              photoUrl={upgradedImageUrl || photoUrl}
               onModelUrlChange={setModelUrl}
             />
 
