@@ -35,6 +35,7 @@ export default function FoodDetailPage() {
   const [currentWishlistId, setCurrentWishlistId] = useState<string | null>(null)
   const [recommendations, setRecommendations] = useState<Array<Pick<Food, '_id' | 'name' | 'photo' | 'origin'>>>([])
   const [userWishlist, setUserWishlist] = useState<{ id?: string; name?: string }[]>([])
+  const [is3DModalOpen, setIs3DModalOpen] = useState(false)
 
   useEffect(() => {
     ;(async () => {
@@ -188,6 +189,12 @@ export default function FoodDetailPage() {
     }
   }
 
+  const handle3DModalToggle = () => {
+    if (food?.model3D) {
+      setIs3DModalOpen(!is3DModalOpen)
+    }
+  }
+
   if (!food) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
@@ -206,6 +213,40 @@ export default function FoodDetailPage() {
           </Button>
         </div>
       </header>
+
+      {/* 3D Model Modal */}
+      {is3DModalOpen && food?.model3D && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={handle3DModalToggle}
+        >
+          <div 
+            className="relative w-full max-w-4xl h-[80vh] bg-white rounded-xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-amber-900 to-transparent p-4 z-10">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white font-bold text-lg">{food.name} - 3D Model</h3>
+                <Button
+                  onClick={handle3DModalToggle}
+                  className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+                >
+                  ✕ Close
+                </Button>
+              </div>
+            </div>
+            <model-viewer
+              src={food.model3D}
+              alt={`${food.name} 3D Model`}
+              auto-rotate
+              camera-controls
+              shadow-intensity="1"
+              style={{ width: '100%', height: '100%' }}
+              className="w-full h-full"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -269,9 +310,36 @@ export default function FoodDetailPage() {
 
             <Card className="p-6 bg-white border-amber-200">
               <h2 className="font-bold text-amber-900 mb-3">3D Model</h2>
-              <p className="text-sm text-amber-700">3D model viewer would be displayed here: {food?.name}</p>
-              <div className="mt-4 h-48 bg-gradient-to-br from-amber-100 to-orange-100 rounded flex items-center justify-center">
-                <span className="text-4xl">📦</span>
+              <p className="text-sm text-amber-700 mb-4">
+                {food?.model3D ? 'Click to view interactive 3D model' : '3D model not available'}
+              </p>
+              <div 
+                className={`mt-4 h-48 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center relative overflow-hidden group ${food?.model3D ? 'cursor-pointer' : ''}`}
+                onClick={handle3DModalToggle}
+              >
+                {food?.model3D ? (
+                  <>
+                    <model-viewer
+                      src={food.model3D}
+                      alt={`${food.name} 3D Model Preview`}
+                      auto-rotate
+                      camera-controls
+                      style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-center">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-lg px-4 py-2 shadow-lg">
+                          <p className="text-amber-900 font-semibold">🔍 Click to view in full screen</p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <span className="text-4xl block mb-2">📦</span>
+                    <p className="text-sm text-amber-700">No 3D model available</p>
+                  </div>
+                )}
               </div>
             </Card>
 
